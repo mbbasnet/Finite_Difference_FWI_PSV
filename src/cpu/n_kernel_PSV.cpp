@@ -116,13 +116,13 @@ void kernel_PSV(int ishot, // shot index
         }
 
         // 1.3: Update stress tensor
-        update_s2(szz, szx, sxx, dz_z, dx_z, dz_x, dx_x, 
-                    lam, mu, mu_zx, nz1, nz2, nx1, nx2, dt,nz,nx);
+         update_s2(szz, szx, sxx, dz_z, dx_z, dz_x, dx_x, 
+                     lam, mu, mu_zx, nz1, nz2, nx1, nx2, dt,nz,nx);
 
  
         // 1.4: Apply mirroring techniques for surfaces conditions (if any)
         if (surf){
-            surf_mirror(szz, szx, sxx, dz_z, dx_x, 
+             surf_mirror(szz, szx, sxx, dz_z, dx_x, 
                     lam, mu, isurf, nz1, nz2, nx1, nx2, dt,nz,nx);
         }
         
@@ -146,7 +146,7 @@ void kernel_PSV(int ishot, // shot index
         }
 
         // 2.3: Update velocity tensor
-        update_v2(vz, vx, uz, ux, We, dz_z, dx_z, dz_x, dx_x, rho_zp, rho_xp, nz1, nz2, nx1, nx2, dt,nz,nx);
+        //update_v2(vz, vx, uz, ux, We, dz_z, dx_z, dz_x, dx_x, rho_zp, rho_xp, nz1, nz2, nx1, nx2, dt,nz,nx);
         // time end
 
         //time2= omp_get_wtime();
@@ -163,8 +163,8 @@ void kernel_PSV(int ishot, // shot index
         if(nsrc){ // source seismograms exist
             // Adding source term corresponding to velocity
             //std::cout <<"The source applied here: "<<std::endl;
-            vsrc2(vz, vx, rho_zp, rho_xp, nsrc, stf_type, stf_z, stf_x, 
-                z_src, x_src, src_shot_to_fire, ishot, it, dt, dz, dx);
+             vsrc2(vz, vx, rho_zp, rho_xp, nsrc, stf_type, stf_z, stf_x, 
+                 z_src, x_src, src_shot_to_fire, ishot, it, dt, dz, dx);
         }
 
         // 3.2: Recording the displacements to the recievers

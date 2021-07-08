@@ -95,6 +95,22 @@ void simulate_fwd_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
     accu_szz, accu_szx, accu_sxx, pml_z, pml_x, nrec, accu, grad, snap_z1, 
     snap_z2, snap_x1, snap_x2, snap_dt, snap_dz, snap_dx, nt, nz, nx);
 
+# pragma acc enter data copyin(lam[:nz][:nx], mu[:nz][:nx], rho[:nz][:nx])
+
+#pragma acc enter data create(vx[:nz][:nx],vz[:nz][:nx],uz[:nz][:nx],ux[:nz][:nx],szz[:nz][:nx],szx[:nz][:nx],sxx[:nz][:nx],We[:nz][:nx])
+#pragma acc enter data create(mem_vz_z[:nz][:nx],mem_vx_z[:nz][:nx],mem_vz_x[:nz][:nx],mem_vx_x[:nz][:nx] )
+#pragma acc enter data create(mem_szz_z[:nz][:nx],mem_szx_z[:nz][:nx],mem_szx_x[:nz][:nx],mem_sxx_x[:nz][:nx] )
+
+#pragma acc  enter data create(mu_zx[:nz][:nx],rho_zp[:nz][:nx],rho_xp[:nz][:nx])
+#pragma acc  enter data create(dz_z[:nz][:nx], dx_z[:nz][:nx], dz_x[:nz][:nx], dx_x[:nz][:nx])
+#pragma acc  enter data  copyin(b_x[:nx],a_x[:nx],b_half_x[:nx],a_half_x[:nx],K_x[:nx],K_half_x[:nx])
+#pragma acc  enter data copyin( b_z[:nz], a_z[:nz], b_half_z[:nz], a_half_z[:nz],K_z[:nz], K_half_z[:nz])
+
+         int snap_nt = 1 + (nt-1)/snap_dt;
+        int snap_nz = 1 + (snap_z2 - snap_z1)/snap_dz;
+        int snap_nx = 1 + (snap_x2 - snap_x1)/snap_dx;
+       
+#pragma acc enter data create(accu_vz[:snap_nt][:snap_nz][:snap_nx], accu_vx[:snap_nt][:snap_nz][:snap_nx], accu_szz[:snap_nt][:snap_nz][:snap_nx], accu_szx[:snap_nt][:snap_nz][:snap_nx], accu_sxx[:snap_nt][:snap_nz][:snap_nx])
 
     // calculate material average
     mat_av2(lam, mu, rho, mu_zx, rho_zp, rho_xp, 

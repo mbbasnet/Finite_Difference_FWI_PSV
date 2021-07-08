@@ -2,4 +2,5 @@
 *.bin
 *.o
 *.bin
+*.nvprof
 bin/seis_fwi
