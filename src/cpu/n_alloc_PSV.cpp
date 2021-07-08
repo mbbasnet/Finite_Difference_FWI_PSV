@@ -93,6 +93,7 @@ void alloc_varin_PSV( real *&hc, int *&isurf, int *&npml, // holberg coefficient
 
 }
 
+
 void alloc_varmain_PSV(
     // Wave arguments 
     real **&vz, real **&vx,  // velocity
@@ -126,6 +127,7 @@ void alloc_varmain_PSV(
 
 
     // allocate velocities
+
     allocate_array(vz, nz, nx); 
     allocate_array(vx, nz, nx); 
 
@@ -140,6 +142,8 @@ void alloc_varmain_PSV(
 
     // Allocate Energy for forward modelling
     allocate_array(We, nz, nx); 
+
+//#pragma acc enter data copyin(vz[:nz][:nx],vx, uz, ux, szz, szx, sxx, We )
 
     // spatial derivatives 
     // (same arrays can be used for ...
@@ -212,5 +216,6 @@ void alloc_varmain_PSV(
         }
         
     }
+
 
 }

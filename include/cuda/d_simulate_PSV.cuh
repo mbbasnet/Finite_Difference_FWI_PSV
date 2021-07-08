@@ -54,3 +54,4 @@ void simulate_fwd_PSV_GPU(int nt, int nz, int nx, real dt, real dz, real dx,
                           bool accu_save, bool seismo_save);
 
 #endif
+

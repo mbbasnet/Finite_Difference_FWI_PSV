@@ -44,3 +44,4 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
     int &taper_l1, int &taper_l2, int &taper_r1, int &taper_r2);
 
 #endif
+//

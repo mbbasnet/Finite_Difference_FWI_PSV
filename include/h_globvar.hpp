@@ -69,3 +69,8 @@ real *a_x, *b_x, *a_half_x, *b_half_x, k_half_x; // PML coefficient x-dir
 // PML parameters not to be transferred to the device
 */
 #endif
+
+
+
+
+

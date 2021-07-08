@@ -56,3 +56,4 @@ real step_length_PSV(real est_step_length, real L2_norm_0, int nshot, // shot in
 
 // Calculation of optimum step length from three points parabolic solution
 real calc_opt_step(real L2[4], real sl[4]);
+

@@ -10,8 +10,10 @@
 
 
 #include "n_simulate_PSV.hpp"
+#include "n_alloc_PSV.hpp"
 #include <iostream>
 #include <math.h>
+
 
 
 void simulate_fwd_PSV(int nt, int nz, int nx, real dt, real dz, real dx, 
@@ -78,7 +80,7 @@ void simulate_fwd_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
     // -----------------------------------------------------------------------------------------------------
 
     // Internal variables
-    bool accu = true, grad = false; 
+    bool accu = true, grad = true; 
 
     // int nt, nz, nx; // grid sizes
     // bool surf, pml_z, pml_x;
@@ -150,6 +152,9 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
     int *&src_shot_to_fire, real **&stf_z, real **&stf_x, real ***&rtf_z_true, real ***&rtf_x_true,
     int mat_save_interval, int &taper_t1, int &taper_t2, int &taper_b1, int &taper_b2, 
     int &taper_l1, int &taper_l2, int &taper_r1, int &taper_r2){
+        
+
+
     // full waveform inversion modelling
     // fwinv = true for this case
     // Internal variables
@@ -177,16 +182,20 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
     real **rtf_uz, **rtf_ux; // receiver time functions (displacements)
     real ***accu_vz, ***accu_vx, ***accu_szz, ***accu_szx, ***accu_sxx; // forward accumulated storage arrays
     // -----------------------------------------------------------------------------------------------------
-    real beta_PCG, beta_i, beta_j;
+    real beta_PCG;//  , beta_i, beta_j;
 
     // allocating main computational arrays
     accu = true; grad = true;
+
+    
     alloc_varmain_PSV(vz, vx, uz, ux, We, We_adj, szz, szx, sxx, dz_z, dx_z, dz_x, dx_x, 
     mem_vz_z, mem_vx_z, mem_szz_z, mem_szx_z, mem_vz_x, mem_vx_x, mem_szx_x, mem_sxx_x,
     mu_zx, rho_zp, rho_xp, lam_copy, mu_copy, rho_copy, grad_lam, grad_mu, grad_rho, 
     grad_lam_shot, grad_mu_shot, grad_rho_shot, rtf_uz, rtf_ux, accu_vz, accu_vx, 
     accu_szz, accu_szx, accu_sxx, pml_z, pml_x, nrec, accu, grad, snap_z1, 
     snap_z2, snap_x1, snap_x2, snap_dt, snap_dz, snap_dx, nt, nz, nx);
+
+
 
     // Allocating PCG variables
     //PCG_new = new real[nz*nx*3];
@@ -200,15 +209,20 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
     allocate_array(PCG_dir_lam, nz, nx);
     allocate_array(PCG_dir_mu, nz, nx);
     allocate_array(PCG_dir_rho, nz, nx);
-    
+# pragma acc region
+{
+    #pragma acc  loop independent 
     for (int iz=0;iz<nz;iz++){
+        #pragma acc  loop independent
         for (int ix=0;ix<nx;ix++){
             PCG_dir_lam[iz][ix] = 0.0;
             PCG_dir_mu[iz][ix] = 0.0;
             PCG_dir_rho[iz][ix] = 0.0;
+            vz[iz][ix]=0.0;
         }
     }
 
+}
 
     //-----------------------------------------------
     // 0.0. OUTER PREPROCESSING (IN EVERY FWI LOOPS)
@@ -230,7 +244,8 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
     for (int ll=0;ll<1000;ll++){ L2_norm[ll] = 0.0;}
     real step_length = 0.01; // step length set to initial
     real step_length_rho = 0.01; // step length set to initial
-    
+   
+
     while (iter){ // currently 10 just for test (check the conditions later)
         std::cout << std::endl << std::endl;
         std::cout << "==================================" << std::endl;
@@ -277,7 +292,7 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
             
             // calculating L2 norm and adjoint sources
             L2_norm[iterstep] += adjsrc2(ishot, a_stf_type, rtf_uz, rtf_ux, rtf_type, rtf_z_true, rtf_x_true,
-                            rtf_uz, rtf_ux, dt, nrec, nt);
+                            rtf_uz, rtf_ux, dt, nrec, nt, nshot);
 
             std::cout<<"L2 NORM: " << L2_norm[iterstep]/L2_norm[0] << ", " << L2_norm[iterstep]<< std::endl;
             if (iterstep > 2){
@@ -296,8 +311,8 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
             }
             
             // Seismic adjoint kernel
-            accu = false; // Accumulated storage for output
-            grad = true; // no gradient computation in forward kernel
+            accu = true; // Accumulated storage for output
+            grad = false; // no gradient computation in forward kernel
             kernel_PSV(ishot, nt, nz, nx, dt, dx, dz, surf, isurf, hc, fdorder, 
                 vz, vx,  uz, ux, szz, szx, sxx, We_adj, dz_z, dx_z, dz_x, dx_x, 
                 lam, mu, mu_zx, rho_zp, rho_xp, 
@@ -313,9 +328,12 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
                 snap_dt, snap_dz, snap_dx);
 			
             // Smooth gradients
-        
+                std::cout<<"exit kernel\n";
+        int snap_nz = 1 + (snap_z2 - snap_z1)/snap_dz;
+        int snap_nx = 1 + (snap_x2 - snap_x1)/snap_dx;
+       
             // Calculate Energy Weights
-            energy_weights2(We, We_adj, snap_z1, snap_z2, snap_x1, snap_x2);
+            energy_weights2(We, We_adj, snap_z1, snap_z2, snap_x1, snap_x2,nz,nx);
             
             // [We_adj used as temporary gradient here after]
             
@@ -323,29 +341,29 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
             // ----------------------------------------
             // Interpolate gradients to temporary array
             interpol_grad2(We_adj, grad_lam_shot, snap_z1, snap_z2, 
-                        snap_x1, snap_x2, snap_dz, snap_dx);
+                        snap_x1, snap_x2, snap_dz, snap_dx,nz,nx);
             
             // Scale to energy weight and add to global array 
             scale_grad_E2(grad_lam, We_adj, scalar_lam, We,
-                    snap_z1, snap_z2, snap_x1, snap_x2);
+                    snap_z1, snap_z2, snap_x1, snap_x2,nz,nx);
             
             // GRAD_MU
             // ----------------------------------------
             // Interpolate gradients to temporary array
             interpol_grad2(We_adj, grad_mu_shot, snap_z1, snap_z2, 
-                        snap_x1, snap_x2, snap_dz, snap_dx);
+                        snap_x1, snap_x2, snap_dz, snap_dx,nz,nx);
             // Scale to energy weight and add to global array 
             scale_grad_E2(grad_mu, We_adj, scalar_mu, We,
-                    snap_z1, snap_z2, snap_x1, snap_x2);
+                    snap_z1, snap_z2, snap_x1, snap_x2,nz,nx);
 
             // GRAD_RHO
             // ----------------------------------------
             // Interpolate gradients to temporary array
             interpol_grad2(We_adj, grad_rho_shot, snap_z1, snap_z2, 
-                        snap_x1, snap_x2, snap_dz, snap_dx);
+                        snap_x1, snap_x2, snap_dz, snap_dx,nz,nx);
             // Scale to energy weight and add to global array 
             scale_grad_E2(grad_rho, We_adj, scalar_rho, We,
-                    snap_z1, snap_z2, snap_x1, snap_x2);
+                    snap_z1, snap_z2, snap_x1, snap_x2,nz,nx);
 
         }
         
@@ -487,6 +505,7 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
            std::cout << "The change is less than minimal after " << iterstep << " iteration steps." << std::endl;
        }
     }
+    
 
     // Saving the Accumulative storage file to a binary file for every shots
     if (mat_save_interval<1){
@@ -495,5 +514,8 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
         write_mat(lam, mu, rho, nz, nx, iterstep);
         std::cout <<" <DONE>"<< std::endl;
     }
+
+
+
 }
 

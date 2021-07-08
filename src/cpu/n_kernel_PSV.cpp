@@ -80,7 +80,7 @@ void kernel_PSV(int ishot, // shot index
 	if (grad){ // Reset gradient for each shots
 		reset_grad_shot2(grad_lam, grad_mu, grad_rho,
 					snap_z1, snap_z2, snap_x1, snap_x2,
-					snap_dz, snap_dx);
+					snap_dz, snap_dx, nz, nx);
 	} 
         
     for(int jt=0; jt<nt; jt++){
@@ -99,11 +99,11 @@ void kernel_PSV(int ishot, // shot index
         // STEP 1: UPDATING STRESS TENSOR
         // -----------------------------------------------------------------------
         //timing start
-        double time1,time2;
-        double net=0.0;
-        time1= omp_get_wtime();
+//        double time1,time2;
+      //  double net=0.0;yy
+       // time1= omp_get_wtime();
         // 1.1: Spatial velicity derivatives
-        vdiff2(dz_z, dx_z, dz_x, dx_x, vz, vx, hc, nz1, nz2, nx1, nx2, dz, dx);
+        vdiff2(dz_z, dx_z, dz_x, dx_x, vz, vx, hc, nz1, nz2, nx1, nx2, dz, dx,nz,nx);
 
         
         // 1.2: PML memory update for velocity gradients (if any)
@@ -112,18 +112,18 @@ void kernel_PSV(int ishot, // shot index
                 a_z, b_z, K_z, a_half_z, b_half_z, K_half_z,
                 a_x, b_x, K_x, a_half_x, b_half_x, K_half_x, 
                 mem_vz_z, mem_vx_z, mem_vz_x, mem_vx_x, 
-                nz1, nz2, nx1, nx2);
+                nz1, nz2, nx1, nx2,nz,nx);
         }
 
         // 1.3: Update stress tensor
         update_s2(szz, szx, sxx, dz_z, dx_z, dz_x, dx_x, 
-                    lam, mu, mu_zx, nz1, nz2, nx1, nx2, dt);
+                    lam, mu, mu_zx, nz1, nz2, nx1, nx2, dt,nz,nx);
 
  
         // 1.4: Apply mirroring techniques for surfaces conditions (if any)
         if (surf){
             surf_mirror(szz, szx, sxx, dz_z, dx_x, 
-                    lam, mu, isurf, nz1, nz2, nx1, nx2, dt);
+                    lam, mu, isurf, nz1, nz2, nx1, nx2, dt,nz,nx);
         }
         
         // -----------------------------------------------------------------------
@@ -134,7 +134,7 @@ void kernel_PSV(int ishot, // shot index
         // -----------------------------------------------------------------------
 
         // 2.1: Spatial stress derivatives
-        sdiff2(dz_z, dx_z, dz_x, dx_x, szz, szx, sxx, nz1, nz2, nx1, nx2, dz, dx, hc);
+        sdiff2(dz_z, dx_z, dz_x, dx_x, szz, szx, sxx, nz1, nz2, nx1, nx2, dz, dx, hc, nz, nx);
 
         // 2.2: PML memory update for stress gradients (if any)
         if(pml_z||pml_x){
@@ -142,11 +142,11 @@ void kernel_PSV(int ishot, // shot index
                 a_z, b_z, K_z, a_half_z, b_half_z, K_half_z,
                 a_x, b_x, K_x, a_half_x, b_half_x, K_half_x, 
                 mem_szz_z, mem_szx_z, mem_szx_x, mem_sxx_x, 
-                nz1, nz2, nx1, nx2);
+                nz1, nz2, nx1, nx2,nz,nx);
         }
 
         // 2.3: Update velocity tensor
-        update_v2(vz, vx, uz, ux, We, dz_z, dx_z, dz_x, dx_x, rho_zp, rho_xp, nz1, nz2, nx1, nx2, dt);
+        update_v2(vz, vx, uz, ux, We, dz_z, dx_z, dz_x, dx_x, rho_zp, rho_xp, nz1, nz2, nx1, nx2, dt,nz,nx);
         // time end
 
         //time2= omp_get_wtime();
@@ -170,7 +170,7 @@ void kernel_PSV(int ishot, // shot index
         // 3.2: Recording the displacements to the recievers
         if(nrec && !grad){ // reciever seismograms exist
             // Recording to the receivers
-            urec2(rtf_type, rtf_uz, rtf_ux, vz, vx, nrec, z_rec, x_rec, it, dt, dz, dx);
+            urec2(rtf_type, rtf_uz, rtf_ux, vz, vx, nrec, z_rec, x_rec, it, dt, dz, dx, nz,nx);
         }
 
         // -----------------------------------------------------------------------
@@ -188,19 +188,21 @@ void kernel_PSV(int ishot, // shot index
         // Time index in forward accumulated storage array
         if (!(it%snap_dt)){
             tf = it/snap_dt; 
-            
+        int snap_nt = 1 + (nt-1)/snap_dt;
+        int snap_nz = 1 + (snap_z2 - snap_z1)/snap_dz;
+        int snap_nx = 1 + (snap_x2 - snap_x1)/snap_dx;
+       
             if (accu){ // Forward kernel (store tensor arrays)
-
+     
                 gard_fwd_storage2(accu_vz, accu_vx, accu_szz, accu_szx, accu_sxx,
-                        vz, vx, szz, szx, sxx, dt, tf, snap_z1, snap_z2, snap_x1, snap_x2, snap_dz, snap_dx);
+                        vz, vx, szz, szx, sxx, dt, tf, snap_z1, snap_z2, snap_x1, snap_x2, snap_dz, snap_dx,nz,nx, snap_nt, snap_nz, snap_nx);
 
             }
 
             if (grad){ // Adjoint kernel (calculate gradients)
                 fwi_grad2(grad_lam, grad_mu, grad_rho, accu_vz, accu_vx, accu_szz, accu_szx, accu_sxx,
-                        uz, ux, szz, szx, sxx, lam, mu, dt, tf, snap_dt, snap_z1, snap_z2, snap_x1, snap_x2, snap_dz, snap_dx);
-
-
+                        uz, ux, szz, szx, sxx, lam, mu, dt, tf, snap_dt, snap_z1, snap_z2, snap_x1, snap_x2, snap_dz, snap_dx,nz,nx, snap_nt, snap_nz, snap_nx);
+                        
             }
 
         }

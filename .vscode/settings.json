@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.cu": "cpp",
         "fstream": "cpp",
         "array": "cpp",
         "atomic": "cpp",
@@ -44,6 +45,15 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "cinttypes": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "chrono": "cpp",
+        "condition_variable": "cpp",
+        "cstring": "cpp",
+        "ctime": "cpp",
+        "map": "cpp",
+        "ratio": "cpp",
+        "set": "cpp",
+        "mutex": "cpp",
+        "thread": "cpp"
     }
 }

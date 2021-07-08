@@ -117,12 +117,13 @@ real step_length_PSV(real est_step_length, real L2_norm_0, int nshot, // shot in
 
                 // calculating L2 norm and adjoint sources
                 L2_tmp += adjsrc2(ishot, a_stf_type, rtf_uz, rtf_ux, rtf_type, rtf_z_true, rtf_x_true,
-                        rtf_uz, rtf_ux, dt, nrec, nt);
+                        rtf_uz, rtf_ux, dt, nrec, nt, nshot);
 
             }   
             L2_test[itest] = L2_tmp;
             step_length[itest] = est_step_length;
 	        step_length[0] = 0.0;
+            std::cout<<"i = "<<itest<<"  L2_tmp= "<<L2_tmp<<"\n";
         } 
         std::cout << "Step Length: " << est_step_length << ", L2 = " << L2_tmp <<", counter = "<< countstep << std::endl;
         std::cout << "L2_test = [" << L2_test[0] << ", " << L2_test[1] << ", " << L2_test[2] << " ]" <<std::endl;
@@ -515,3 +516,4 @@ real calc_opt_step(real L2[3], real sl[3]){
     return opteps;
 
 }
+

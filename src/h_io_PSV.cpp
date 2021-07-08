@@ -382,3 +382,4 @@ void write_mat(real **&lam, real **&mu, real **&rho, int nz, int nx, int iterste
     outfile_mat.close();
 
 }
+
