@@ -1,4 +1,4 @@
-CXX      := pgc++
+CXX      := nvc++
 CUXX 	:= nvcc
 CXXFLAGS := -acc -ta=nvidia -Minfo=accel #-std=c++17 -pedantic-errors -Wall -Wextra -Werror 
 CUXXFLAGS :=  #-std=c++17 -pedantic-errors -Wall -Wextra -Werror
@@ -48,7 +48,7 @@ release: all
 run:
 	python3 ./scripts/pre_proc.py
 	$(APP_DIR)/$(TARGET) 
-	python3 ./scripts/post_proc.py
+	#python3 ./scripts/post_proc.py
 
 clean:
 	-@rm -rvf $(OBJ_DIR)/*

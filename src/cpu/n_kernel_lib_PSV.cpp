@@ -30,10 +30,10 @@ void reset_sv2(
     int s2=sizeof(vz[0])/sizeof(real);
     //std::cout<<"enter reset_sv2\n";
 
-    #pragma acc  parallel loop independent 
+    #pragma acc data copyin(vx[:nz][:nx],vz[:nz][:nx],uz[:nz][:nx],ux[:nz][:nx],szz[:nz][:nx],szx[:nz][:nx],sxx[:nz][:nx],We[:nz][:nx])
     {
+        #pragma acc  parallel loop collapse(2)
     for (int iz = 0; iz<nz; iz++){
-        #pragma acc  loop independent
         for (int ix = 0; ix<nx; ix++){
             // Wave velocity and stress tensor arrays
             vz[iz][ix] = 0.0;
@@ -61,7 +61,7 @@ void reset_PML_memory2(
     // generally applicable in the beginning of the time loop
   
 //std::cout<<"enter reset_PML_memory2\n";
-  #pragma acc data copy(mem_vz_z[:nz][:nx],mem_vx_z[:nz][:nx],mem_vz_x[:nz][:nx],mem_vx_x[:nz][:nx] )
+  #pragma acc data copyin(mem_vz_z[:nz][:nx],mem_vx_z[:nz][:nx],mem_vz_x[:nz][:nx],mem_vx_x[:nz][:nx] )
 {
 #pragma acc parallel loop independent 
     for (int iz = 0; iz<nz; iz++){
@@ -86,7 +86,7 @@ void reset_grad_shot2(real **grad_lam, real **grad_mu, real **grad_rho,
     jz = 0;
     //std::cout<<"enter reset_grad_shot2\n";
 
-#pragma acc data copy(grad_lam[:nz][:nx],grad_mu[:nz][:nx],grad_rho[:nz][:nx])
+#pragma acc data copyin(grad_lam[:nz][:nx],grad_mu[:nz][:nx],grad_rho[:nz][:nx])
 {   
     
     #pragma acc  parallel loop independent private(jx,jz)
@@ -126,7 +126,7 @@ void vdiff2(
     
  //std::cout<<"enter vdiff2\n";
 
- #pragma acc data copy(vz_z[:nz][:nx], vx_z[:nz][:nx], vz_x[:nz][:nx], vx_x[:nz][:nx], vz[:nz][:nx], vx[:nz][:nx])
+ #pragma acc data copyin(vz_z[:nz][:nx], vx_z[:nz][:nx], vz_x[:nz][:nx], vx_x[:nz][:nx], vz[:nz][:nx], vx[:nz][:nx])
 {     
    #pragma acc parallel loop 
     for(int iz=nz1; iz<nz2; iz++){
@@ -166,9 +166,9 @@ void pml_diff2(bool pml_z, bool pml_x,
     // 2D space grid
      //std::cout<<"enter pml_diff2\n";
 
-#pragma acc  data copy(mem_z_z[:nz][:nx],mem_x_z[:nz][:nx] ,dz_z[:nz][:nx], dx_z[:nz][:nx], b_z[:nz], a_z[:nz], b_half_z[:nz], a_half_z[:nz],K_z[:nz], K_half_z[:nz])
-#pragma acc  data copy(dx_x[:nz][:nx], dz_x[:nz][:nx], mem_x_x[:nz][:nx], mem_z_x[:nz][:nx] )
-#pragma acc data copy(b_x[:nx],a_x[:nx],b_half_x[:nx],a_half_x[:nx],K_x[:nx],K_half_x[:nx])
+#pragma acc  data copyin(mem_z_z[:nz][:nx],mem_x_z[:nz][:nx] ,dz_z[:nz][:nx], dx_z[:nz][:nx], b_z[:nz], a_z[:nz], b_half_z[:nz], a_half_z[:nz],K_z[:nz], K_half_z[:nz])
+#pragma acc  data copyin(dx_x[:nz][:nx], dz_x[:nz][:nx], mem_x_x[:nz][:nx], mem_z_x[:nz][:nx] )
+#pragma acc data copyin(b_x[:nx],a_x[:nx],b_half_x[:nx],a_half_x[:nx],K_x[:nx],K_half_x[:nx])
  {
 #pragma acc parallel  loop default(none)
     for(int iz=nz1; iz<nz2; iz++){
@@ -220,8 +220,8 @@ void update_s2(
 
         //std::cout<<"enter update_s2\n";
 
-#pragma acc  data copy(szz[:nz][:nx], szx[:nz][:nx], sxx[:nz][:nx],mu_zx[:nz][:nx], lam[:nz][:nx], mu[:nz][:nx], vx_x[:nz][:nx], vz_z[:nz][:nx], vz_x[:nz][:nx])
-#pragma acc  data copy(vx_z[:nz][:nx])
+#pragma acc  data copyin(szz[:nz][:nx], szx[:nz][:nx], sxx[:nz][:nx],mu_zx[:nz][:nx], lam[:nz][:nx], mu[:nz][:nx], vx_x[:nz][:nx], vz_z[:nz][:nx], vz_x[:nz][:nx])
+#pragma acc  data copyin(vx_z[:nz][:nx])
 {   
  #pragma acc parallel loop independent default(none)
     for(int iz=nz1; iz<nz2; iz++){
@@ -256,7 +256,7 @@ void sdiff2(
     // updates the stress kernels for each timestep in 2D grid
 
     real dxi = 1.0/dx; real dzi = 1.0/dz; // inverse of dx and dzlam
-#pragma acc  data copy(szz[:nz][:nx], szx[:nz][:nx], sxx[:nz][:nx],szz_z[:nz][:nx], szz_z[:nz][:nx], szx_z[:nz][:nx], szx_x[:nz][:nx], sxx_x[:nz][:nx])
+#pragma acc  data copyin(szz[:nz][:nx], szx[:nz][:nx], sxx[:nz][:nx],szz_z[:nz][:nx], szz_z[:nz][:nx], szx_z[:nz][:nx], szx_x[:nz][:nx], sxx_x[:nz][:nx])
 {
     // 2D space grid
    //std::cout<<"enter sdiff2\n";
@@ -296,8 +296,8 @@ void update_v2(
     int nz1, int nz2, int nx1, int nx2, real dt, int nz, int nx){
     // update stress from velocity derivatives
         //std::cout<<"enter update_v2\n";
-#pragma acc data copy(szz_z[:nz][:nx], szx_z[:nz][:nx], szx_x[:nz][:nx], sxx_x[:nz][:nx], rho_zp[:nz][:nx], rho_xp[:nz][:nx] )
-#pragma acc data copy(uz[:nz][:nx], ux[:nz][:nx], vz[:nz][:nx], vx[:nz][:nx], We[:nz][:nx])
+#pragma acc data copyin(szz_z[:nz][:nx], szx_z[:nz][:nx], szx_x[:nz][:nx], sxx_x[:nz][:nx], rho_zp[:nz][:nx], rho_xp[:nz][:nx] )
+#pragma acc data copyin(uz[:nz][:nx], ux[:nz][:nx], vz[:nz][:nx], vx[:nz][:nx], We[:nz][:nx])
 {
     #pragma acc parallel loop independent default(none)
     for(int iz=nz1; iz<nz2; iz++){
@@ -336,7 +336,7 @@ void surf_mirror(
         ////std::cout<<"enter surf_mirror\n";
 
 
-#pragma acc data copy(szz[:nz][:nx], szx[:nz][:nx], sxx[:nz][:nx], mu[:nz][:nx], lam[:nz][:nx], vx_x[:nz][:nx],vz_z[:nz][:nx] )
+#pragma acc data copyin(szz[:nz][:nx], szx[:nz][:nx], sxx[:nz][:nx], mu[:nz][:nx], lam[:nz][:nx], vx_x[:nz][:nx],vz_z[:nz][:nx] )
 {
     int isurf;
     // -----------------------------
@@ -456,8 +456,8 @@ void gard_fwd_storage2(
     int snap_x1, int snap_x2, int snap_dz, int snap_dx, int nz, int nx, int snap_nt, int snap_nz, int snap_nx ){
  //std::cout<<"enter gard_fwd_storage2\n";
     
-#pragma acc data copy(accu_vz[:snap_nt][:snap_nz][:snap_nx], accu_vx[:snap_nt][:snap_nz][:snap_nx], accu_szz[:snap_nt][:snap_nz][:snap_nx], accu_szx[:snap_nt][:snap_nz][:snap_nx], accu_sxx[:snap_nt][:snap_nz][:snap_nx])
-#pragma acc data copy(szz[:nz][:nx], szx[:nz][:nx], sxx[:nz][:nx],  vx[:nz][:nx],vz[:nz][:nx] )
+#pragma acc data copyin(accu_vz[:snap_nt][:snap_nz][:snap_nx], accu_vx[:snap_nt][:snap_nz][:snap_nx], accu_szz[:snap_nt][:snap_nz][:snap_nx], accu_szx[:snap_nt][:snap_nz][:snap_nx], accu_sxx[:snap_nt][:snap_nz][:snap_nx])
+#pragma acc data copyin(szz[:nz][:nx], szx[:nz][:nx], sxx[:nz][:nx],  vx[:nz][:nx],vz[:nz][:nx] )
 {
  
 
@@ -511,12 +511,13 @@ void fwi_grad2(
     int jz, jx; // mapping for storage with intervals
     
     jz = 0; 
-   #pragma acc data copy(szz[:nz][:nx],uz[:nz][:nx],ux[:nz][:nx],sxx[:nz][:nx],lam[:nz][:nx],szx[:nz][:nx],mu[:nz][:nx], grad_lam[:nz][:nx])
-   #pragma acc data copy(accu_vz[:snap_nt][:snap_nz][:snap_nx], accu_vx[:snap_nt][:snap_nz][:snap_nx], accu_szz[:snap_nt][:snap_nz][:snap_nx], accu_szz[:snap_nt][:snap_nz][:snap_nx], accu_szx[:snap_nt][:snap_nz][:snap_nx], accu_sxx[:snap_nt][:snap_nz][:snap_nx])
-    #pragma acc parallel loop independent private(jx,jz,s1, s2, s3, s4)
-    for(int iz=snap_z1;iz<=snap_z2;iz+=snap_dz){
+   #pragma acc data copyin(grad_rho[:nz][:nx], grad_mu[:nz][:nx] , grad_lam[:nz][:nx])
+   #pragma acc data copyin(accu_vz[:snap_nt][:snap_nz][:snap_nx], szz[:nz][:nx],uz[:nz][:nx],ux[:nz][:nx],sxx[:nz][:nx],lam[:nz][:nx],szx[:nz][:nx],mu[:nz][:nx], accu_vx[:snap_nt][:snap_nz][:snap_nx], accu_szz[:snap_nt][:snap_nz][:snap_nx], accu_szz[:snap_nt][:snap_nz][:snap_nx], accu_szx[:snap_nt][:snap_nz][:snap_nx], accu_sxx[:snap_nt][:snap_nz][:snap_nx])
+{
+    #pragma acc parallel loop independent default(none) private(jx,jz,s1, s2, s3, s4)
+    for(int iz=snap_z1;iz<=(snap_z2-snap_z1)/snap_dz;iz+=snap_dz){
         jx = 0;
-       // //#pragma acc  loop independent 
+       #pragma acc  loop independent 
         for(int ix=snap_x1;ix<=snap_x2;ix+=snap_dx){
             
             s1 = 0.25 * (accu_szz[tf][jz][jx] + accu_sxx[tf][jz][jx]) * (szz[iz][ix] + sxx[iz][ix])
@@ -563,6 +564,8 @@ void fwi_grad2(
         }
 		
 		jz++;
+    }
+
     }
 }
 
@@ -669,7 +672,7 @@ real adjsrc2(int ishot, int *a_stf_type, real **a_stf_uz, real **a_stf_ux,
     L2 = 0;
      //std::cout<<"enter adjsrc2\n";
 
-    #pragma acc data copy(rtf_ux_true[:nshot][:nseis][:nt])
+    #pragma acc data copyin(rtf_ux_true[:nshot][:nseis][:nt], a_stf_ux[:nseis][:nt],  a_stf_uz[:nseis][:nt]  )
 
     if (rtf_type == 0){
         // RTF type is displacement
@@ -726,7 +729,7 @@ void interpol_grad2(
     // FOR LOOP SET 1
     // -----------------------------------
     jz = 0; 
-    #pragma acc data copy(grad[:nz][:nx], grad_shot[:snap_nz][:snap_nx])
+    #pragma acc data copyin(grad[:nz][:nx], grad_shot[:snap_nz][:snap_nx])
 {
      #pragma acc parallel loop independent private(jz,jx)
     for(int iz=snap_z1;iz<=snap_z2;iz+=snap_dz){
@@ -871,7 +874,7 @@ void update_mat2(real **mat, real **mat_old,  real **grad_mat,
 
     // Scale factors for gradients
     real grad_max = 0.0, mat_array_max = 0.0, step_factor;
-    //#pragma acc parallel loop independent private(grad_max,mat_array_max)
+    #pragma acc parallel loop collapse(2) reduction(max:grad_max,mat_array_max)
     for (int iz=0;iz<nz;iz++){
         for (int ix=0;ix<nx;ix++){
             
@@ -884,9 +887,11 @@ void update_mat2(real **mat, real **mat_old,  real **grad_mat,
     std::cout << "Update factor: " << step_factor << ", " << mat_max << ", " << grad_max << std::endl;
 
     // Material update to whole array
-//#pragma acc parallel loop independent private(mat_av,mat_av_old, mat_av_grad )
+   #pragma acc data copyout(mat[:nz][:nx])
+   {
+#pragma acc parallel loop independent reduction(+:mat_av,mat_av_old, mat_av_grad )
     for (int iz=0;iz<nz;iz++){
-        //#pragma acc  loop independent
+        #pragma acc  loop independent
         for (int ix=0;ix<nx;ix++){
             
             mat[iz][ix] = mat_old[iz][ix] + step_length * step_factor * grad_mat[iz][ix];
@@ -900,13 +905,18 @@ void update_mat2(real **mat, real **mat_old,  real **grad_mat,
         }
         
     }
-    //std::cout << "Mat update: SL = " <<step_length <<", new = " << mat_av <<", old = " << mat_av_old <<", grad = " << mat_av_grad << std::endl;;
+
+   }
+    std::cout << "Mat update: SL = " <<step_length <<", new = " << mat_av <<", old = " << mat_av_old <<", grad = " << mat_av_grad << std::endl;;
 }
 void copy_mat(real **lam_copy, real **mu_copy,  real **rho_copy,
         real **lam, real **mu,  real **rho, int nz, int nx){
  //std::cout<<"enter copy_mat\n";
 
     // Copy material values for storage
+    #pragma acc  data copyin( rho[:nz][:nx], lam[:nz][:nx], rho[:nz][:nx], rho_copy[:nz][:nx], lam_copy[:nz][:nx], rho_copy[:nz][:nx])
+    {
+        #pragma acc parallel loop gang vector collapse(2)
     for (int iz=0;iz<nz;iz++){
         for (int ix=0;ix<nx;ix++){
             
@@ -917,7 +927,7 @@ void copy_mat(real **lam_copy, real **mu_copy,  real **rho_copy,
         }
         
     }
-    
+ }
 
 }
 
@@ -932,7 +942,7 @@ void mat_av2(
  //std::cout<<"enter mat_av2\n";
 
     double C_lam = 0.0; double C_mu = 0.0; double C_rho = 0.0;
-    #pragma acc  data copy(mu_zx[:nz][:nx], mu[:nz][:nx], rho_zp[:nz][:nx],rho_xp[:nz][:nx],  rho[:nz][:nx], lam[:nz][:nx])
+    #pragma acc  data copyin(mu_zx[:nz][:nx], mu[:nz][:nx], rho_zp[:nz][:nx],rho_xp[:nz][:nx],  rho[:nz][:nx], lam[:nz][:nx])
     {
     #pragma acc parallel loop independent reduction(+:C_lam,C_mu,C_rho)
     for (int iz=0; iz<nz-1; iz++){
@@ -983,7 +993,7 @@ void mat_av2(
 void mat_grid2(real **lam, real **mu, real **rho, 
     real lam_sc, real mu_sc, real rho_sc, int nz, int nx){
     // Scalar material value is distributed over the grid
- #pragma acc  data copy(mu[:nz][:nx],  rho[:nz][:nx], lam[:nz][:nx])
+ #pragma acc  data copyin(mu[:nz][:nx],  rho[:nz][:nx], lam[:nz][:nx])
     {
 #pragma acc parallel loop
     for (int iz=0;iz<nz;iz++){
@@ -1012,7 +1022,7 @@ void taper2(real **A, int nz, int nx,
 
 
     // Horizontal taper
- #pragma acc  data copy(A[:nz][:nx])
+ #pragma acc  data copyin(A[:nz][:nx])
     {
 #pragma acc parallel loop
     for (int iz=0;iz<nz;iz++){

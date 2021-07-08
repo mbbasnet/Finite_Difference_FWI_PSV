@@ -119,21 +119,25 @@ void simulate_fwd_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
             snap_dt, snap_dz, snap_dx);
 
         // Saving the Accumulative storage file to a binary file for every shots
-        if (accu_save){
-            // Writing the accumulation array
-            std::cout << "Writing accu to binary file for SHOT " << ishot ;
-            write_accu(accu_vz, accu_vx, accu_szz, accu_szx, accu_sxx, nt, snap_z1, snap_z2, snap_x1, 
-            snap_x2, snap_dt, snap_dz, snap_dx, ishot);
-            std::cout <<" <DONE>"<< std::endl;
-        }
+        // if (accu_save){
+        //     // Writing the accumulation array
+        //     #pragma acc exit data copyout(lam[:nz][:nx], mu[:nz][:nx], rho[:nz][:nx])
+        //     std::cout << "Writing accu to binary file for SHOT " << ishot ;
+        //     write_accu(accu_vz, accu_vx, accu_szz, accu_szx, accu_sxx, nt, snap_z1, snap_z2, snap_x1, 
+        //     snap_x2, snap_dt, snap_dz, snap_dx, ishot);
+        //     std::cout <<" <DONE>"<< std::endl;
+        // }
 
         // Saving the Accumulative storage file to a binary file for every shots
-        if (seismo_save){
-            // Writing the accumulation array
-            std::cout << "Writing accu to binary file for SHOT " << ishot ;
-            write_seismo(rtf_uz, rtf_ux, nrec, nt, ishot);
-            std::cout <<" <DONE>"<< std::endl;
-        }
+        // if (seismo_save){
+        //     // Writing the accumulation array
+
+        //     #pragma acc exit data copyout(rtf_uz[:nz][:nx],rtf_ux[:nz][:nx])
+
+        //     std::cout << "Writing accu to binary file for SHOT " << ishot ;
+        //     write_seismo(rtf_uz, rtf_ux, nrec, nt, ishot);
+        //     std::cout <<" <DONE>"<< std::endl;
+        // }
 
     }
     
@@ -145,7 +149,7 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
     int snap_z1, int snap_z2, int snap_x1, int snap_x2, int snap_dt, int snap_dz, int snap_dx, 
     bool surf, bool pml_z, bool pml_x, int nsrc, int nrec, int nshot, int stf_type, int rtf_type, 
     int fdorder, real scalar_lam, real scalar_mu, real scalar_rho,
-    real *&hc, int *&isurf, real **&lam, real **&mu, real **&rho, 
+    real *&hc, int *&isurf, real **lam, real **mu, real **rho, 
     real *&a_z, real *&b_z, real *&K_z, real *&a_half_z, real *&b_half_z, real *&K_half_z,
     real *&a_x, real *&b_x, real *&K_x, real *&a_half_x, real *&b_half_x, real *&K_half_x,
     int *&z_src, int *&x_src, int *&z_rec, int *&x_rec,
@@ -209,11 +213,10 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
     allocate_array(PCG_dir_lam, nz, nx);
     allocate_array(PCG_dir_mu, nz, nx);
     allocate_array(PCG_dir_rho, nz, nx);
-# pragma acc region
+# pragma acc data copyin(PCG_dir_lam[:nz][:nx], PCG_dir_mu[:nz][:nx], PCG_dir_rho[:nz][:nx], vz[:nz][:nx])
 {
-    #pragma acc  loop independent 
+    #pragma acc parallel loop collapse(2)
     for (int iz=0;iz<nz;iz++){
-        #pragma acc  loop independent
         for (int ix=0;ix<nx;ix++){
             PCG_dir_lam[iz][ix] = 0.0;
             PCG_dir_mu[iz][ix] = 0.0;
@@ -490,6 +493,7 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
         std::cout<<"Iteration step: " <<iterstep<<", "<<mat_save_interval<<", "<< iterstep%mat_save_interval<<std::endl;
         if (mat_save_interval>0 && !(iterstep%mat_save_interval)){
             // Writing the accumulation array
+           #pragma acc exit data copyout(lam[:nz][:nx], mu[:nz][:nx], rho[:nz][:nx])
             std::cout << "Writing updated material to binary file for ITERATION " << iterstep ;
             write_mat(lam, mu, rho, nz, nx, iterstep);
             std::cout <<" <DONE>"<< std::endl;
@@ -499,6 +503,7 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
 
        //
        iterstep++ ;
+       exit(0);
        iter = (iterstep < maxIter) ? true : false; // Temporary condition
        if (iterstep > 25){
            iter = (abs((L2_norm[iterstep] - L2_norm[iterstep-2])/L2_norm[iterstep-2])<0.001) ? false : true; // Temporary condition
@@ -510,6 +515,7 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
     // Saving the Accumulative storage file to a binary file for every shots
     if (mat_save_interval<1){
         // Writing the accumulation array
+        #pragma acc exit data copyout(lam[:nz][:nx], mu[:nz][:nx], rho[:nz][:nx])
         std::cout << "Writing updated material to binary file <FINAL> ITERATION " << iterstep ;
         write_mat(lam, mu, rho, nz, nx, iterstep);
         std::cout <<" <DONE>"<< std::endl;
