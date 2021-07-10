@@ -83,7 +83,7 @@ void kernel_PSV(int ishot, // shot index
 					snap_dz, snap_dx, nz, nx);
 	} 
         
-    for(int jt=0; jt<nt; jt++){
+    for(int jt=0; jt< 1/*nt*/; jt++){
         if(grad){ // Adjoint kernel
             it=nt-jt-1; // Starts from back to front in adjoint modelling 
         } 
@@ -146,7 +146,7 @@ void kernel_PSV(int ishot, // shot index
         }
 
         // 2.3: Update velocity tensor
-        //update_v2(vz, vx, uz, ux, We, dz_z, dx_z, dz_x, dx_x, rho_zp, rho_xp, nz1, nz2, nx1, nx2, dt,nz,nx);
+        update_v2(vz, vx, uz, ux, We, dz_z, dx_z, dz_x, dx_x, rho_zp, rho_xp, nz1, nz2, nx1, nx2, dt,nz,nx);
         // time end
 
         //time2= omp_get_wtime();
@@ -164,13 +164,13 @@ void kernel_PSV(int ishot, // shot index
             // Adding source term corresponding to velocity
             //std::cout <<"The source applied here: "<<std::endl;
              vsrc2(vz, vx, rho_zp, rho_xp, nsrc, stf_type, stf_z, stf_x, 
-                 z_src, x_src, src_shot_to_fire, ishot, it, dt, dz, dx);
+                 z_src, x_src, src_shot_to_fire, ishot, it, dt, dz, dx, nt);
         }
 
         // 3.2: Recording the displacements to the recievers
         if(nrec && !grad){ // reciever seismograms exist
             // Recording to the receivers
-            urec2(rtf_type, rtf_uz, rtf_ux, vz, vx, nrec, z_rec, x_rec, it, dt, dz, dx, nz,nx);
+            urec2(rtf_type, rtf_uz, rtf_ux, vz, vx, nrec, z_rec, x_rec, it, dt, dz, dx, nz,nx, nt);
         }
 
         // -----------------------------------------------------------------------

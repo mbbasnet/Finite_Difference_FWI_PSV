@@ -1,6 +1,6 @@
 CXX      := nvc++
 CUXX 	:= nvcc
-CXXFLAGS := -acc -ta=nvidia -Minfo=accel #-std=c++17 -pedantic-errors -Wall -Wextra -Werror 
+CXXFLAGS := -acc -ta=tesla,cc70 -Minfo=accel #-std=c++17 -pedantic-errors -Wall -Wextra -Werror 
 CUXXFLAGS :=  #-std=c++17 -pedantic-errors -Wall -Wextra -Werror
 LDFLAGS  := #-L/usr/lib -L/usr/local/cuda/include -lstdc++ -lm -lcudart 
 #LDFLAGS  := -L/usr/lib -L/usr/lib/cuda -lstdc++ -lm -lcudart 
@@ -47,10 +47,11 @@ release: all
 
 run:
 	python3 ./scripts/pre_proc.py
-	$(APP_DIR)/$(TARGET) 
+	$(APP_DIR)/$(TARGET)
+	#sudo nvprof  $(APP_DIR)/$(TARGET) 
 	#python3 ./scripts/post_proc.py
 
 clean:
-	-@rm -rvf $(OBJ_DIR)/*
-	-@rm -rvf $(APP_DIR)/*
+	-@rm -rvf $(OBJ_DIR)/* 
+	-@rm -rvf $(APP_DIR)/* 
 

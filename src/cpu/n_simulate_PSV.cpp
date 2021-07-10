@@ -13,6 +13,8 @@
 #include "n_alloc_PSV.hpp"
 #include <iostream>
 #include <math.h>
+#include <chrono>
+using namespace std::chrono;
 
 
 
@@ -62,6 +64,15 @@ void simulate_fwd_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
     */
     // ---------------------------------------------------------------------------------------
 
+    //COPY INPUT ARRAYS TO GPU
+#pragma acc enter data  copyin(lam[:nz][:nx], mu[:nz][:nx], rho[:nz][:nx] )
+#pragma acc enter data  copyin(b_x[:nx], a_x[:nx], b_half_x[:nx], a_half_x[:nx],K_x[:nx], K_half_x[:nx])
+#pragma acc enter data  copyin(b_z[:nz], a_z[:nz], b_half_z[:nz], a_half_z[:nz],K_z[:nz], K_half_z[:nz])
+#pragma acc enter data  copyin(z_src[:nsrc], x_src[:nsrc], z_rec[:nrec], x_rec[:nrec])
+//#pragma acc enter data  copyin(rtf_z_true[:nshot][:nrec][:nt], rtf_x_true[:nshot][:nrec][:nt])
+#pragma acc enter data  copyin(stf_z[:nsrc][:nt], stf_x[:nsrc][:nt],src_shot_to_fire[:nsrc] )
+
+
     // -------------------------------------------------------------------------------------------------------
     // Internally computational arrays
     // --------------------------------------------------------------------------------------------------------
@@ -81,6 +92,7 @@ void simulate_fwd_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
 
     // Internal variables
     bool accu = true, grad = true; 
+    
 
     // int nt, nz, nx; // grid sizes
     // bool surf, pml_z, pml_x;
@@ -95,18 +107,15 @@ void simulate_fwd_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
     accu_szz, accu_szx, accu_sxx, pml_z, pml_x, nrec, accu, grad, snap_z1, 
     snap_z2, snap_x1, snap_x2, snap_dt, snap_dz, snap_dx, nt, nz, nx);
 
-# pragma acc enter data copyin(lam[:nz][:nx], mu[:nz][:nx], rho[:nz][:nx])
-
+// CREATE LOCAL DATA ON GPU
 #pragma acc enter data create(vx[:nz][:nx],vz[:nz][:nx],uz[:nz][:nx],ux[:nz][:nx],szz[:nz][:nx],szx[:nz][:nx],sxx[:nz][:nx],We[:nz][:nx])
 #pragma acc enter data create(mem_vz_z[:nz][:nx],mem_vx_z[:nz][:nx],mem_vz_x[:nz][:nx],mem_vx_x[:nz][:nx] )
 #pragma acc enter data create(mem_szz_z[:nz][:nx],mem_szx_z[:nz][:nx],mem_szx_x[:nz][:nx],mem_sxx_x[:nz][:nx] )
 
 #pragma acc  enter data create(mu_zx[:nz][:nx],rho_zp[:nz][:nx],rho_xp[:nz][:nx])
 #pragma acc  enter data create(dz_z[:nz][:nx], dx_z[:nz][:nx], dz_x[:nz][:nx], dx_x[:nz][:nx])
-#pragma acc  enter data  copyin(b_x[:nx],a_x[:nx],b_half_x[:nx],a_half_x[:nx],K_x[:nx],K_half_x[:nx])
-#pragma acc  enter data copyin( b_z[:nz], a_z[:nz], b_half_z[:nz], a_half_z[:nz],K_z[:nz], K_half_z[:nz])
-
-         int snap_nt = 1 + (nt-1)/snap_dt;
+#pragma acc  enter data create(rtf_uz[:nrec][:nt], rtf_ux[:nrec][:nt])
+        int snap_nt = 1 + (nt-1)/snap_dt;
         int snap_nz = 1 + (snap_z2 - snap_z1)/snap_dz;
         int snap_nx = 1 + (snap_x2 - snap_x1)/snap_dx;
        
@@ -121,6 +130,9 @@ void simulate_fwd_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
         std::cout << "FORWARD KERNEL: SHOT " << ishot << " of " << nshot <<"." << std::endl;
         accu = true; // Accumulated storage for output
         grad = false; // no gradient computation in forward kernel
+
+    auto start = high_resolution_clock::now();
+
         kernel_PSV(ishot, nt, nz, nx, dt, dx, dz, surf, isurf, hc, fdorder, 
             vz, vx,  uz, ux, szz, szx, sxx, We, dz_z, dx_z, dz_x, dx_x, 
             lam, mu, mu_zx, rho_zp, rho_xp, grad, grad_lam, grad_mu, grad_rho,
@@ -134,28 +146,61 @@ void simulate_fwd_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
             snap_z1, snap_z2, snap_x1, snap_x2, 
             snap_dt, snap_dz, snap_dx);
 
-        // Saving the Accumulative storage file to a binary file for every shots
-        // if (accu_save){
-        //     // Writing the accumulation array
-        //     #pragma acc exit data copyout(lam[:nz][:nx], mu[:nz][:nx], rho[:nz][:nx])
-        //     std::cout << "Writing accu to binary file for SHOT " << ishot ;
-        //     write_accu(accu_vz, accu_vx, accu_szz, accu_szx, accu_sxx, nt, snap_z1, snap_z2, snap_x1, 
-        //     snap_x2, snap_dt, snap_dz, snap_dx, ishot);
-        //     std::cout <<" <DONE>"<< std::endl;
-        // }
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+
+    std::cout << "TOTAL KERNEL TIME == "<<duration.count()/1000 << " mili secs \n";
 
         // Saving the Accumulative storage file to a binary file for every shots
-        // if (seismo_save){
-        //     // Writing the accumulation array
+        if (accu_save){
+            // Writing the accumulation array
+ #pragma acc  exit data copyout(accu_vz[:snap_nt][:snap_nz][:snap_nx], accu_vx[:snap_nt][:snap_nz][:snap_nx], accu_szz[:snap_nt][:snap_nz][:snap_nx], accu_szx[:snap_nt][:snap_nz][:snap_nx], accu_sxx[:snap_nt][:snap_nz][:snap_nx])
 
-        //     #pragma acc exit data copyout(rtf_uz[:nz][:nx],rtf_ux[:nz][:nx])
+            std::cout << "Writing accu to binary file for SHOT " << ishot ;
+            
+             write_accu(accu_vz, accu_vx, accu_szz, accu_szx, accu_sxx, nt, snap_z1, snap_z2, snap_x1, 
+             snap_x2, snap_dt, snap_dz, snap_dx, ishot);
+        double s1=0,s2=0,s3=0,s4=0, s5=0;
 
-        //     std::cout << "Writing accu to binary file for SHOT " << ishot ;
-        //     write_seismo(rtf_uz, rtf_ux, nrec, nt, ishot);
-        //     std::cout <<" <DONE>"<< std::endl;
-        // }
+    for (int it=0; it<snap_nt; it++){
+        for (int iz=0; iz<snap_nz; iz++){
+            for(int ix = 0; ix<snap_nx; ix++){
+               s1+= accu_vz[it][iz][ix];
+               s2+= accu_vx[it][iz][ix];
+               s3+= accu_szz[it][iz][ix];
+               s4+= accu_szx[it][iz][ix];
+               s5+= accu_sxx[it][iz][ix];
+            }
+        }
+    }
+#pragma acc  enter data copyin(accu_vz[:snap_nt][:snap_nz][:snap_nx], accu_vx[:snap_nt][:snap_nz][:snap_nx], accu_szz[:snap_nt][:snap_nz][:snap_nx], accu_szx[:snap_nt][:snap_nz][:snap_nx], accu_sxx[:snap_nt][:snap_nz][:snap_nx])
+
+
+    std::cout<<"\ns1= "<<s1<<"\n";
+    std::cout<<"s2= "<<s2<<"\n";
+    std::cout<<"s3= "<<s3<<"\n";
+    std::cout<<"s4= "<<s4<<"\n";
+    std::cout<<"s5= "<<s5<<"\n";
+    
+            std::cout <<" <DONE>"<< std::endl;
+        }
+
+        // Saving the Accumulative storage file to a binary file for every shots
+        if (seismo_save){
+            // Writing the accumulation array
+
+            #pragma acc exit data copyout(rtf_uz[:nrec][:nt],rtf_ux[:nrec][:nt])
+
+            std::cout << "Writing accu to binary file for SHOT " << ishot ;
+            write_seismo(rtf_uz, rtf_ux, nrec, nt, ishot);
+            
+            #pragma acc enter data copyin(rtf_uz[:nrec][:nt],rtf_ux[:nrec][:nt])
+            std::cout <<" <DONE>"<< std::endl;
+        }
 
     }
+
+
     
 }
 

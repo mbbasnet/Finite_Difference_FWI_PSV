@@ -75,7 +75,7 @@ void alloc_varpre_PSV( real *&hc, int *&isurf, int *&npml, // holberg coefficien
         z_src = new int[nsrc];
         x_src = new int[nsrc];
         src_shot_to_fire = new int[nsrc];
-
+        
         // stf
         allocate_array(stf_z, nsrc, nt);
         allocate_array(stf_x, nsrc, nt);
@@ -85,6 +85,8 @@ void alloc_varpre_PSV( real *&hc, int *&isurf, int *&npml, // holberg coefficien
         // locations (grid index)
         z_rec = new int[nrec];
         x_rec = new int[nrec];
+       
+        
        std::cout << "Receivers allocated" << std::endl;
         // rtf field measurements
         allocate_array(rtf_z_true, nshot, nrec, nt);

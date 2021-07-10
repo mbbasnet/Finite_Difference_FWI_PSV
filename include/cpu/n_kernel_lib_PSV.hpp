@@ -123,7 +123,7 @@ void vsrc2(
     // source parameters
     int nsrc, int stf_type, real **stf_z, real **stf_x, 
     int *z_src, int *x_src, int *src_shot_to_fire,
-    int ishot, int it, real dt, real dz, real dx);
+    int ishot, int it, real dt, real dz, real dx, int nt);
 
 void urec2(int rtf_type,
     // reciever time functions
@@ -133,7 +133,7 @@ void urec2(int rtf_type,
     // reciever 
     int nrec, int *rz, int *rx, 
     // time and space grids
-    int it, real dt, real dz, real dx, int nz, int nx);
+    int it, real dt, real dz, real dx, int nz, int nx, int nt);
 
 
 real adjsrc2(int ishot, int *a_stf_type, real **a_stf_uz, real **a_stf_ux, 
