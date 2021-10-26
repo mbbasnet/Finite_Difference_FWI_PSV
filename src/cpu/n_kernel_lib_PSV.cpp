@@ -1015,5 +1015,3 @@ void taper2(real **&A, int nz, int nx,
 
 
 }
-
-
