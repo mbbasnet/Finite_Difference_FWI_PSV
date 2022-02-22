@@ -175,12 +175,15 @@ void simulate_PSV()
     // STABILITY AND DISPERSION CHECK
     checkfd_ssg_elastic(NZ, NX, DZ, DT, h_FREQ_PML, h_NPML[1], RHO, LAM, MU, HC);
 
-    for (int is = 0; is < NSRC; is++)
-    {
-        wavelet(STF_Z[is], NT, DT, 0.0, h_FREQ_PML, 0.0, 1); // Creating one Ricker wavelet
-        wavelet(STF_X[is], NT, DT, 1.0, h_FREQ_PML, 0.0, 1); // zero amplitude wavelet
-    }
-
+   
+    // Creating source wavelet
+    read_seismo_src(STF_Z, STF_X, NSRC, NT);
+    
+    //for (int is=0;is<NSRC;is++){
+    //    wavelet(STF_Z[is], NT, DT, 0.0, h_FREQ_PML, 0.0, 1); // Creating one Ricker wavelet 
+    //    wavelet(STF_X[is], NT, DT, 1.0, h_FREQ_PML, 0.0, 1); // zero amplitude wavelet
+    //}
+    
     //std::cout << "Error here 4"<<std::endl;
     // --------------------------------------------------------------------------
     // B. MEMORY COPY TO THE DEVICE
@@ -197,14 +200,16 @@ void simulate_PSV()
         // Calling now the device codes
         std::cout << "THE COMPUTATION STARTS IN GPU" << std::endl;
 
-        //
-        g_simulate_PSV(h_NPML, NT, NZ, NX, DT, DZ, DX, SNAP_Z1, SNAP_Z2, SNAP_X1, SNAP_X2, SNAP_DT, SNAP_DZ, SNAP_DX,
-                       SURF, PML_Z, PML_X, NSRC, NREC, NSHOT, STF_TYPE, RTF_TYPE, FDORDER, SCALAR_LAM, SCALAR_MU, SCALAR_RHO,
-                       HC, ISURF, LAM, MU, RHO, A_Z, B_Z, K_Z, A_HALF_Z, B_HALF_Z, K_HALF_Z, A_X, B_X, K_X, A_HALF_X, B_HALF_X,
-                       K_HALF_X, Z_SRC, X_SRC, Z_REC, X_REC, SRC_SHOT_TO_FIRE, STF_Z, STF_X,
-                       ACCU_SAVE, SEISMO_SAVE,
-                       RTF_Z_TRUE, RTF_X_TRUE, MAT_SAVE_INTERVAL, TAPER_T1, TAPER_T2, TAPER_B1, TAPER_B2,
-                       TAPER_L1, TAPER_L2, TAPER_R1, TAPER_R2, FWINV);
+            //
+            
+            g_simulate_PSV(h_NPML,NT, NZ, NX, DT, DZ, DX, SNAP_Z1, SNAP_Z2, SNAP_X1, SNAP_X2, SNAP_DT, SNAP_DZ, SNAP_DX,
+            SURF, PML_Z, PML_X, NSRC, NREC, NSHOT, STF_TYPE, RTF_TYPE, FDORDER, SCALAR_LAM, SCALAR_MU, SCALAR_RHO,
+            HC, ISURF, LAM, MU, RHO, A_Z, B_Z, K_Z, A_HALF_Z, B_HALF_Z, K_HALF_Z, A_X, B_X, K_X, A_HALF_X, B_HALF_X,
+            K_HALF_X, Z_SRC, X_SRC, Z_REC, X_REC, SRC_SHOT_TO_FIRE, STF_Z, STF_X,
+            ACCU_SAVE, SEISMO_SAVE,
+            RTF_Z_TRUE, RTF_X_TRUE, MAT_SAVE_INTERVAL, TAPER_T1, TAPER_T2, TAPER_B1, TAPER_B2, 
+            TAPER_L1, TAPER_L2, TAPER_R1, TAPER_R2, FWINV);
+            
     }
     else
     {

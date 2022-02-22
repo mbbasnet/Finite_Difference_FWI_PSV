@@ -1,20 +1,29 @@
 #%%
 # # preprocessing of the files
 import numpy as np
-from seismic_def import read_tensor, e_lami, v_lami, w_vel
+from seismic_def import read_tensor, v_lami, w_vel
 import matplotlib.pyplot as plt
 
 ftype = np.float64
 
+ftype = np.float64
+
+##---------------------------------------------------------------------
+# COMPUTATION IN GPU OR CPU
+#---------------------------------------------------------------------
+
+cuda_computation = True # True: computation in GPU, False: in CPU
+
+#forward only or fWI?
+fwinv = True # True: FWI, False: Forward only
 # -------------------------------------------------------------------------
 # FINITE DIFFERENCE PARAMETERS
 # --------------------------------------------------------------------------
 
 fdorder = 2 # finite difference order 
 fpad = 1 # number of additional grids for finite difference computation
-
 #forward only or fWI?
-fwinv = False # True: FWI, False: Forward only
+
 
 # Internal parameters for different cases 
 if (fwinv):
@@ -52,33 +61,33 @@ len = l_uadd + l_usl + l_top + l_dsl + l_dadd  # Meters
 d_top = 0.5
 d_wt = 1.0
 d_sub = 4.0
-d_tot = 7.0
+d_tot = 5.0
 dep = d_tot # Depth
 
 
 # Number of PMLs in each direction
 pml_z = True; pml_x = True # PML exist in both direction
-npml_top = 20; npml_bottom = 20; npml_left = 20; npml_right = 20
+npml_top = 10; npml_bottom = 10; npml_left = 10; npml_right = 10
 
 # Geometric data
 dt = 0.3e-4; dz = 0.1; dx = 0.1; # grid intervals
-nt = 9000.0; 
-nz = fpad + npml_top + np.int32(dep/dz) + npml_bottom + fpad+ 1
-nx = fpad + npml_left + np.int32(len/dx) + npml_right + fpad + 1 # grid numbers (adding for PMLs as well)
+nt = 6000.0; 
+nz = fpad + npml_top + np.int(dep/dz) + npml_bottom + fpad+ 1
+nx = fpad + npml_left + np.int(len/dx) + npml_right + fpad + 1 # grid numbers (adding for PMLs as well)
 
 
 # Surface grid index in each direction (0 = no surface)
-surf = True # surface exists
+surf = False # surface exists
 isurf_top = 0; isurf_bottom = 0; isurf_left = 0; isurf_right = 0
 
 
 
 snap_t1 = 0; snap_t2 = nt-1 # snap in time steps
-snap_z1 = fpad #+npml_top+np.int32(d_wt/dz) 
-snap_z2 = nz - fpad #- npml_bottom #fpad+npml_top+np.int32(d_tot/dz) # snap boundaries z
-snap_x1 = fpad #np.int32(nx/2 - 1.0*l_top/dz) 
-snap_x2 = nx - fpad #np.int32(nx/2  + 1.0*l_top/dz) # snap boundaries x
-snap_dt = 10; snap_dz = 1; snap_dx = 1; # the snap interval
+snap_z1 = 20 
+snap_z2 = nz - snap_z1 #fpad+npml_top+np.int32(d_tot/dz) # snap boundaries z
+snap_x1 = 50 
+snap_x2 = nx-snap_x1 # snap boundaries x
+snap_dt = 3; snap_dz = 1; snap_dx = 1; # the snap interval
 
 # Taper position
 nz_snap = snap_z2 - snap_z1
@@ -86,11 +95,11 @@ nx_snap = snap_x2 - snap_x1
 
 # taper relative to the total grid
 # t: top, b: bottom, l: left, r: right
-taper_t1 = snap_z1 + np.int32(nz_snap*0.00); taper_t2 = taper_t1 + np.int32(nz_snap*0.00)
-taper_b1 = snap_z2 - np.int32(nz_snap*0.00); taper_b2 = taper_b1 - np.int32(nz_snap*0.00)
+taper_t1 = snap_z1 + np.int32(nz_snap*0.00); taper_t2 = taper_t1 + np.int32(nz_snap*0.05)
+taper_b1 = snap_z2 - np.int32(nz_snap*0.00); taper_b2 = taper_b1 - np.int32(nz_snap*0.05)
 
-taper_l1 = snap_x1 + np.int32(nx_snap*0.0); taper_l2 = taper_l1 + np.int32(nx_snap*0.00)
-taper_r1 = snap_x2 - np.int32(nx_snap*0.0); taper_r2 = taper_r1 - np.int32(nx_snap*0.00)
+taper_l1 = snap_x1 + np.int32(nx_snap*0.0); taper_l2 = taper_l1 + np.int32(nx_snap*0.05)
+taper_r1 = snap_x2 - np.int32(nx_snap*0.0); taper_r2 = taper_r1 - np.int32(nx_snap*0.05)
 #snap_z1 = 1; snap_z2 = nz-1  # snap boundaries z
 #snap_x1 = 1; snap_x2 = nx-1 # snap boundaries x
 
@@ -113,35 +122,27 @@ mat_grid = 1 # 0 for scalar and 1 for grid
 rho_air = 1.25
 lam_air, mu_air = v_lami(0.0, 0.0, rho_air)
 
-rho_water = 1000.0
-lam_water, mu_water = v_lami(1500, 0.0, rho_water)
+rho_water = 1.25 # 1000
+lam_water, mu_water = v_lami(0.0, 0.0, rho_water) # Cp 1500
 
 #rho_sub = 1800.0
 #lam_sub, mu_sub = v_lami(1400, 700, rho_sub)
 
-rho_sub = 2000.0
-lam_sub, mu_sub = v_lami(1400, 700, rho_sub)
+rho_sub = 1700.0
+lam_sub, mu_sub = v_lami(700, 200, rho_sub)
 
 rho_sand = 1700.0
 lam_sand, mu_sand = v_lami(700, 200, rho_sand)
 
-rho_sand_grout = 1000.0 #2000.0
-lam_sand_grout, mu_sand_grout = v_lami(300, 100.0, rho_sand_grout)
+rho_sand_grout = 2000.0
+lam_sand_grout, mu_sand_grout = v_lami(2000, 800, rho_sand_grout)
 
 # --------------------------------------------
 
 # Getting wave velocities for hardest layers
 Cp, Cs = w_vel(lam_sub, mu_sub, rho_sub)
 
-# Scalar material values to pass to the kernelsdam
-for iz in range(0, nz):
-    for ix in range(0, nx):
-        if (iz>np.int32(fpad + npml_top+d_top/dz)): # top boundary 
-            if (iz - np.int32(fpad + npml_top+d_top/dz) >= 0.33*(ix - (fpad + npml_left + np.int32((l_uadd + l_usl + l_top)/dx)))):
-                if (iz - (fpad + npml_top + np.int32(d_top/dz)) >= -0.33*(ix - (fpad + npml_left + np.int32((l_uadd + l_usl)/dx)))):
-                    lam[iz][ix] = lam_sand
-                    mu[iz][ix] = mu_sand
-                    rho[iz][ix] = rho_sand
+# Scalar material values to pass to the kernels
 scalar_rho = rho_sand
 scalar_mu = mu_sand
 scalar_lam = lam_sand
@@ -157,21 +158,21 @@ rho = np.full((nz, nx), rho_air)
 for iz in range(0, nz):
     for ix in range(0, nx):
         # for sand dam
-        if (iz>np.int32(fpad + npml_top+d_top/dz)): # top boundary 
-            if (iz - np.int32(fpad + npml_top+d_top/dz) >= 0.33*(ix - (fpad + npml_left + np.int32((l_uadd + l_usl + l_top)/dx)))):
-                if (iz - (fpad + npml_top + np.int32(d_top/dz)) >= -0.33*(ix - (fpad + npml_left + np.int32((l_uadd + l_usl)/dx)))):
+        if (iz>np.int(fpad + npml_top+d_top/dz)): # top boundary 
+            if (iz - np.int(fpad + npml_top+d_top/dz) >= 0.33*(ix - (fpad + npml_left + np.int((l_uadd + l_usl + l_top)/dx)))):
+                if (iz - (fpad + npml_top + np.int(d_top/dz)) >= -0.33*(ix - (fpad + npml_left + np.int((l_uadd + l_usl)/dx)))):
                     lam[iz][ix] = lam_sand
                     mu[iz][ix] = mu_sand
                     rho[iz][ix] = rho_sand
                     
                     
-        if (iz>np.int32(fpad + npml_top+d_wt/dz)): # water level boundary
-            if (iz - (fpad + npml_top + np.int32(d_top/dz)) < -0.33*(ix - (fpad + npml_left + np.int32((l_uadd + l_usl)/dx)))):
+        if (iz>np.int(fpad + npml_top+d_wt/dz)): # water level boundary
+            if (iz - (fpad + npml_top + np.int(d_top/dz)) < -0.33*(ix - (fpad + npml_left + np.int((l_uadd + l_usl)/dx)))):
                 lam[iz][ix] = lam_water
                 mu[iz][ix] = mu_water
                 rho[iz][ix] = rho_water
                 
-        if (iz>np.int32(fpad + npml_top +d_sub/dz)): # subsurface boundary
+        if (iz>np.int(fpad + npml_top +d_sub/dz)): # subsurface boundary
             lam[iz][ix] = lam_sub
             mu[iz][ix] = mu_sub
             rho[iz][ix] = rho_sub
@@ -183,14 +184,10 @@ for iz in range(0, nz):
             #    if ((ix > fpad + npml_left + (l_uadd+ l_usl +l_top/2 - 1.0)/dx - 0.25*np.cos(((iz*dz)-fpad-npml_top-d_top-1.5)*np.pi)/dz) and \
             #        (ix < fpad + npml_left + (l_uadd+ l_usl +l_top/2 + 1.0)/dx + 0.25*np.cos(((iz*dz)-fpad-npml_top-d_top-1.5)*np.pi)/dz)): # left and right boundarz
 
-
-            if (iz*dz > nz*dz/2.5):
-                if (ix*dx > (nx*dx/2+(iz*dz -nz*dz/2.5))):
-                    if (ix*dx-0.4 < (nx*dx/2+(iz*dz -nz*dz/2.5))):
-                        #if ((ix*dx - (nx*dx/2))**2 +(iz*dx - (nz*dz/2+0.4))**2 < 0.5):
-                        lam[iz][ix] = lam_sand_grout
-                        mu[iz][ix] = mu_sand_grout
-                        rho[iz][ix] = rho_sand_grout
+            if ((ix*dx - (nx*dx/2))**2 +(iz*dx - (nz*dz/2+0.4))**2 < 0.5):
+                lam[iz][ix] = lam_sand_grout
+                mu[iz][ix] = mu_sand_grout
+                rho[iz][ix] = rho_sand_grout
 
             '''
 
@@ -318,6 +315,7 @@ plt.show()
 
 
 
+
 # -------------------------------------------------------------------------------
 # --------------------------------------------------------------------------------
 # PROCESSING TO PREPARE THE ARRAYS (DO NOT MODIFY)
@@ -370,6 +368,7 @@ material_inp.tofile('./bin/mat.bin')
 
 #--------------------------------------------------------
 #-------------------------------------------------------
+
 
 
 

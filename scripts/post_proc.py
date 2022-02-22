@@ -1,5 +1,5 @@
 # Post processing in python
-
+#%%
 
 # reading the output arrays
 import numpy as np
@@ -8,6 +8,21 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 import sys
+
+# Field parameters
+l_uadd = 1.0
+l_usl = 12.0
+l_top = 3.0
+l_dsl = 12.0
+l_dadd = 1.0
+len = l_uadd + l_usl + l_top + l_dsl + l_dadd  # Meters
+
+d_top = 0.5
+d_wt = 1.0
+d_sub = 4.0
+d_tot = 7.0
+dep = d_tot # Depth
+npml_fpad = 21
 
 def read_metaint(filename, dtype):
     
@@ -42,7 +57,7 @@ def read_tensor(filename, dtype, dshape):
 
 
 # reading the input data for the array size
-read_metaint("./bin/metaint.bin", np.int32)
+read_metaint("../bin/metaint.bin", np.int32)
 snap_nt = np.int32(1 + (ndim[0]-1)//snap[6])
 snap_nz = 1 + (snap[3] - snap[2])//snap[7]
 snap_nx = 1 + (snap[4] - snap[5])//snap[8]
@@ -51,11 +66,11 @@ snap_nx = 1 + (snap[4] - snap[5])//snap[8]
 
 if (fwinv):
     print("Plotting material for iteration in fwi")
-    maxiter = 25
-    for ii in range(0,maxiter,1):
+    maxiter = 700
+    for ii in range(600,maxiter,1):
         # reading data from csv file
-        mat_dat = read_tensor("./bin/iter"+np.str(ii)+"_mat.bin", np.float64, (3, ndim[1], ndim[2]))
-        #mat_dat = read_tensor("./io/mat_save/iter"+np.str(ii)+"_mat copy.bin", np.float64, (3, ndim[1], ndim[2]))
+        mat_dat = read_tensor("../bin/iter"+np.str(ii)+"_mat.bin", np.float64, (3, ndim[1], ndim[2]))
+        #mat_dat = read_tensor("../io/mat_save/iter"+np.str(ii)+"_mat copy.bin", np.float64, (3, ndim[1], ndim[2]))
         
         lam = mat_dat[0][:][:]
         mu = mat_dat[1][:][:]
@@ -85,7 +100,7 @@ if (fwinv):
         #pyplot.gca().invert_yaxis()
         #pyplot.axis('equal')
         plt.grid()
-        #pyplot.savefig('./io/vz_snap'+numpy.str(ii)+'.pdf', format='pdf',figsize=(10,7), dpi=1000)
+        #pyplot.savefig('../io/vz_snap'+numpy.str(ii)+'.pdf', format='pdf',figsize=(10,7), dpi=1000)
         #plt.show()
         #plt.draw()
         if (ii==(maxiter-1)):
@@ -93,8 +108,6 @@ if (fwinv):
         else:
             plt.pause(0.005)
             plt.clf()
-        
-        
         
         #print('Figure '+np.str(ii)+' plotted.')
 
@@ -106,8 +119,8 @@ else:
     
     # Plot the rtf first
     print("NREC: ", nrec)
-    rtf_uz = read_tensor("./bin/shot2_rtf_uz.bin", np.float64, (nrec, ndim[0]))
-    rtf_ux = read_tensor("./bin/shot2_rtf_ux.bin", np.float64, (nrec, ndim[0]))
+    rtf_uz = read_tensor("../bin/shot2_rtf_uz.bin", np.float64, (nrec, ndim[0]))
+    rtf_ux = read_tensor("../bin/shot2_rtf_ux.bin", np.float64, (nrec, ndim[0]))
     
     
     # Plotting the RTF functions
@@ -115,15 +128,15 @@ else:
     plt.subplot(211)
     for ii in range(0, nrec):   
         plt.plot(rtf_uz[ii][:])
-        plt.grid()
+    plt.grid()
     plt.subplot(212)
     for ii in range(0, nrec):
         plt.plot(rtf_ux[ii][:])
-        plt.grid()
+    plt.grid()
     plt.show()
     
-    vz_dat = read_tensor("./bin/shot2_vz.bin", np.float64, (snap_nt, snap_nz, snap_nx))
-    vx_dat = read_tensor("./bin/shot2_vx.bin", np.float64, (snap_nt, snap_nz, snap_nx))
+    vz_dat = read_tensor("../bin/shot2_vz.bin", np.float64, (snap_nt, snap_nz, snap_nx))
+    vx_dat = read_tensor("../bin/shot2_vx.bin", np.float64, (snap_nt, snap_nz, snap_nx))
     
     clip_pz = np.amax(vz_dat)
     clip_mz = np.amin(vz_dat)
@@ -133,8 +146,7 @@ else:
     clip_mx = np.amin(vx_dat)
     clipx = 0.3*max([clip_px, np.abs(clip_mx)])
     
-    
-    for ii in range(1,snap_nt):
+    for ii in range(1,snap_nt, 20):
         # reading data from csv file
         vz = vz_dat[ii,:,:]
         vx = vx_dat[ii,:,:]  
@@ -157,7 +169,7 @@ else:
         #pyplot.gca().invert_yaxis()
         #pyplot.axis('equal')
         plt.grid()
-        #pyplot.savefig('./io/vz_snap'+numpy.str(ii)+'.pdf', format='pdf',figsize=(10,7), dpi=1000)
+        #pyplot.savefig('../io/vz_snap'+numpy.str(ii)+'.pdf', format='pdf',figsize=(10,7), dpi=1000)
         #plt.show()
         #plt.draw()
         plt.pause(0.01)
@@ -170,3 +182,4 @@ else:
         
         #print('Figure '+np.str(ii)+' plotted.')
         del vz
+# %%

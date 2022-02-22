@@ -372,6 +372,11 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
 
     //     std::cout << "This is test CPU>ADJOINT \nLAM_SHOT=" << l << " \nMU_SHOT=" << m << " \nRHO_SHOT=" << r << " \n\n";
 
+        // Smoothen the grad shots
+        // Applying gauss filter to material gradients
+       // apply_gauss_filter(grad_lam_shot, gauss_temp_shot, gauss_filter, snap_nz, snap_nx, hfs);
+        //apply_gauss_filter(grad_mu_shot, gauss_temp_shot, gauss_filter, snap_nz, snap_nx, hfs);
+        //apply_gauss_filter(grad_rho_shot, gauss_temp_shot, gauss_filter, snap_nz, snap_nx, hfs);
 
 			
             // Smooth gradients
@@ -445,6 +450,12 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
                 taper_t1, taper_t2, taper_b1, taper_b2, taper_l1, taper_l2, taper_r1, taper_r2);
         
 
+        std::cout << "Applying Gauss Filter" << std::endl;
+        // Applying gauss filter to material gradients
+        //apply_gauss_filter(grad_lam, We_adj, gauss_filter, 0, nz, 0, nx, hfs);
+        //apply_gauss_filter(grad_mu, We_adj, gauss_filter, 0, nz, 0, nx, hfs);
+        //apply_gauss_filter(grad_rho, We_adj, gauss_filter, 0, nz, 0, nx, hfs);
+
         /*
         //write_mat(grad_lam, grad_mu, grad_rho, nz, nx, 1000*(iterstep+1)+1);
         // Applying PSG method
@@ -496,7 +507,7 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
 		// Step length estimation for wave parameters
 
         //uncomment here.....
-        
+        std::cout << "Calculate Step Length" << std::endl;
         step_length = step_length_PSV(step_length, L2_norm[iterstep], nshot, nt, nz, nx, dt, dx, dz, surf, isurf, hc, fdorder, 
             vz, vx,  uz, ux, szz, szx, sxx,  We, dz_z, dx_z, dz_x, dx_x, 
             lam, mu, rho, lam_copy, mu_copy, rho_copy, 
@@ -543,12 +554,12 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
         //return;
 
         //
-        // Saving the Accumulative storage file to a binary file for every shots
+        // Saving the Accumulative storage file to a binary file for every Iteration
         std::cout<<"Iteration step: " <<iterstep<<", "<<mat_save_interval<<", "<< iterstep%mat_save_interval<<std::endl;
         if (mat_save_interval>0 && !(iterstep%mat_save_interval)){
             // Writing the accumulation array
             std::cout << "Writing updated material to binary file for ITERATION " << iterstep ;
-           write_mat(lam, mu, rho, nz, nx, iterstep);
+            write_mat(lam, mu, rho, nz, nx, iterstep);
             std::cout <<" <DONE>"<< std::endl;
         }
         
