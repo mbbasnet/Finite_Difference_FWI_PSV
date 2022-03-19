@@ -147,46 +147,6 @@ void g_simulate_PSV(int *&npml, int nt, int nz, int nx, real dt, real dz, real d
         pml_z, pml_x, nsrc, nrec,
         nt, nshot, nz, nx);
 
-    // Calling global device functions (forward and fwi kernels)
-    if (fwinv)
-    {
-
-        // Use auto keyword to avoid typing long
-        // type definitions to get the timepoint
-        // at this instant use function now()
-
-        std::cout << "Here you go: FWI" << std::endl;
-        simulate_fwi_PSV_GPU(nt, nz, nx, dt, dz, dx,
-                             snap_z1, snap_z2, snap_x1, snap_x2, snap_dt, snap_dz, snap_dx,
-                             surf, pml_z, pml_x, nsrc, nrec, nshot, stf_type, rtf_type,
-                             fdorder, scalar_lam, scalar_mu, scalar_rho,
-
-                             d_hc, d_isurf, d_lam, d_mu, d_rho,
-                             d_a_z, d_b_z, d_K_z, d_a_half_z, d_b_half_z, d_K_half_z,
-                             d_a_x, d_b_x, d_K_x, d_a_half_x, d_b_half_x, d_K_half_x,
-                             d_z_src, d_x_src, d_z_rec, d_x_rec,
-                             d_src_shot_to_fire, d_stf_z, d_stf_x, d_rtf_z_true, d_rtf_x_true,
-                             mat_save_interval, taper_t1, taper_t2, taper_b1, taper_b2,
-                             taper_l1, taper_l2, taper_r1, taper_r2);
-    }
-    else
-    {
-        std::cout << "Here you go: FWD" << std::endl;
-
-        simulate_fwd_PSV_GPU(nt, nz, nx, dt, dz, dx,
-                             snap_z1, snap_z2, snap_x1, snap_x2, snap_dt, snap_dz, snap_dx,
-                             surf, pml_z, pml_x, nsrc, nrec, nshot, stf_type, rtf_type,
-                             fdorder, scalar_lam, scalar_mu, scalar_rho,
-                             d_hc, d_isurf,
-                             d_lam, d_mu, d_rho,
-                             d_a_z, d_b_z, d_K_z, d_a_half_z, d_b_half_z, d_K_half_z,
-                             d_a_x, d_b_x, d_K_x, d_a_half_x, d_b_half_x, d_K_half_x,
-                             d_z_src, d_x_src, d_z_rec, d_x_rec,
-                             d_src_shot_to_fire, d_stf_z, d_stf_x,
-                             accu_save, seismo_save);
-
-        //simulate_fwd_PSV() // call the global device code with device variables
-    }
 
     auto stop = high_resolution_clock::now();
 
@@ -197,6 +157,50 @@ void g_simulate_PSV(int *&npml, int nt, int nz, int nx, real dt, real dz, real d
     std::cout << "Time taken by GPU: "
               << duration.count()/1000000.0 << " seconds"
               << "\n";
+
+
+    // Calling global device functions (forward and fwi kernels)
+    // if (fwinv)
+    // {
+
+    //     // Use auto keyword to avoid typing long
+    //     // type definitions to get the timepoint
+    //     // at this instant use function now()
+
+    //     std::cout << "Here you go: FWI" << std::endl;
+    //     simulate_fwi_PSV_GPU(nt, nz, nx, dt, dz, dx,
+    //                          snap_z1, snap_z2, snap_x1, snap_x2, snap_dt, snap_dz, snap_dx,
+    //                          surf, pml_z, pml_x, nsrc, nrec, nshot, stf_type, rtf_type,
+    //                          fdorder, scalar_lam, scalar_mu, scalar_rho,
+
+    //                          d_hc, d_isurf, d_lam, d_mu, d_rho,
+    //                          d_a_z, d_b_z, d_K_z, d_a_half_z, d_b_half_z, d_K_half_z,
+    //                          d_a_x, d_b_x, d_K_x, d_a_half_x, d_b_half_x, d_K_half_x,
+    //                          d_z_src, d_x_src, d_z_rec, d_x_rec,
+    //                          d_src_shot_to_fire, d_stf_z, d_stf_x, d_rtf_z_true, d_rtf_x_true,
+    //                          mat_save_interval, taper_t1, taper_t2, taper_b1, taper_b2,
+    //                          taper_l1, taper_l2, taper_r1, taper_r2);
+    // }
+    // else
+    // {
+    //     std::cout << "Here you go: FWD" << std::endl;
+
+    //     simulate_fwd_PSV_GPU(nt, nz, nx, dt, dz, dx,
+    //                          snap_z1, snap_z2, snap_x1, snap_x2, snap_dt, snap_dz, snap_dx,
+    //                          surf, pml_z, pml_x, nsrc, nrec, nshot, stf_type, rtf_type,
+    //                          fdorder, scalar_lam, scalar_mu, scalar_rho,
+    //                          d_hc, d_isurf,
+    //                          d_lam, d_mu, d_rho,
+    //                          d_a_z, d_b_z, d_K_z, d_a_half_z, d_b_half_z, d_K_half_z,
+    //                          d_a_x, d_b_x, d_K_x, d_a_half_x, d_b_half_x, d_K_half_x,
+    //                          d_z_src, d_x_src, d_z_rec, d_x_rec,
+    //                          d_src_shot_to_fire, d_stf_z, d_stf_x,
+    //                          accu_save, seismo_save);
+
+    //     //simulate_fwd_PSV() // call the global device code with device variables
+    // }
+
+
 }
 
 void simulate_fwd_PSV_GPU(int nt, int nz, int nx, real dt, real dz, real dx,
