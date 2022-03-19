@@ -154,7 +154,7 @@ void g_simulate_PSV(int *&npml, int nt, int nz, int nx, real dt, real dz, real d
 
     // To get the value of duration use the count()
     // member function on the duration object
-    std::cout << "Time taken by GPU: "
+    std::cout << "Time taken by Memory Copy On GPU: "
               << duration.count()/1000000.0 << " seconds"
               << "\n";
 
