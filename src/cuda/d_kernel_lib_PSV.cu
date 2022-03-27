@@ -45,7 +45,6 @@ void mat_grid2_GPU(
     int snap_z1, int snap_z2, int snap_x1, int snap_x2, int nz, int nx)
 {
 
-    //kernel configration
     int box1 = 32, box2 = 32;
     dim3 threadsPerBlock(box1, box2);
     dim3 blocksPerGrid((nz) / box1 + 1, (nx) / box2 + 1);
@@ -53,13 +52,10 @@ void mat_grid2_GPU(
 //    auto start_GPU = high_resolution_clock::now();
     cuda_mat_grid2_GPU << <blocksPerGrid, threadsPerBlock >> > (lam, mu, rho, lam_sc, mu_sc, rho_sc,
         snap_z1, snap_z2, snap_x1, snap_x2, nz, nx);
-    // auto stop_GPU = high_resolution_clock::now();
-    // auto duration_GPU = duration_cast<microseconds>(stop_GPU - start_GPU);
-    // cout << "Time taken by GPU: "
-    //     << duration_GPU.count() << " microseconds" << endl;
 
     cudaCheckError(cudaDeviceSynchronize());
 }
+
 
 __global__ void cuda_copy_mat_GPU(real *lam_copy, real *mu_copy,  real *rho_copy,
         real *lam, real *mu,  real *rho, int nz, int nx)
