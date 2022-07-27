@@ -5,9 +5,8 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
- 
 
-# Make data base, printed on Wed Jul 27 11:16:01 2022
+# Make data base, printed on Wed Jul 27 13:07:05 2022
 
 # Variables
 
@@ -154,7 +153,6 @@ INCLUDE_CUDA :=
 # default
 MAKEFILES := 
 # environment
- 
 LC_NUMERIC = de_DE.UTF-8
 # automatic
 <F = $(notdir $<)
@@ -197,19 +195,18 @@ APP_DIR := bin
 
 # Directories
 
-# . (device 2050, inode 146474541): 14 files, no impossibilities.
+# . (device 2050, inode 146474541): 16 files, no impossibilities.
 # src/cpu (device 2050, inode 146669770): 8 files, no impossibilities.
 # src (device 2050, inode 146669769): 11 files, no impossibilities.
 # ext: could not be stat'd.
 
-# 33 files, no impossibilities in 4 directories.
+# 35 files, no impossibilities in 4 directories.
 
 # Implicit Rules
 
 obj/%.o: %.cpp
 #  recipe to execute (from 'Makefile', line 25):
 	@mkdir -p $(@D)
- 
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(INCLUDE_CUDA) -c $< -o $@ $(LDFLAGS)
 
 # 1 implicit rules, 0 (0.0%) terminal.
@@ -264,7 +261,7 @@ obj/src/cpu/n_PCG_PSV.o:
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-07-27 11:12:04.529228569
+#  Last modified 2022-07-27 12:00:36.553989293
 #  File has been updated.
 #  Successfully updated.
 
@@ -277,11 +274,11 @@ obj/src/cpu/n_kernel_PSV.o:
 # makefile (from 'Makefile', line 42)
 debug: CXXFLAGS += -DDEBUG -g
 debug: all
- 
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
+ 
 # variable set hash-table stats:
 # Load=1/32=3%, Rehash=0, Collisions=0/2=0%
 
@@ -351,7 +348,6 @@ release: all
 # Load=1/32=3%, Rehash=0, Collisions=0/2=0%
 
 # Not a target:
- 
 .DEFAULT:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
@@ -362,7 +358,7 @@ run:
 #  Modification time never checked.
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 49):
-	python3 ./scripts/pre_proc.py
+	python3 ./scripts/pre_proc_fwi_try.py
 	$(APP_DIR)/$(TARGET) 
 	#python3 ./scripts/post_proc.py
 
@@ -376,6 +372,7 @@ clean:
 	-@rm -rvf $(APP_DIR)/*
 
 # Not a target:
+ 
 obj/src/cpu/n_kernel_lib_PSV.o:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
@@ -407,12 +404,12 @@ obj/src/h_simulate_PSV.o:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 57 / storage = 760 B / avg = 13 B
-# current buf: size = 8162 B / used = 760 B / count = 57 / avg = 13 B
+# strcache buffers: 1 (0) / strings = 59 / storage = 784 B / avg = 13 B
+# current buf: size = 8162 B / used = 784 B / count = 59 / avg = 13 B
 
-# strcache performance: lookups = 87 / hit rate = 34%
+# strcache performance: lookups = 89 / hit rate = 33%
 # hash-table stats:
-# Load=57/8192=1%, Rehash=0, Collisions=4/87=5%
-# Finished Make data base on Wed Jul 27 11:16:01 2022
+# Load=59/8192=1%, Rehash=0, Collisions=4/89=4%
+# Finished Make data base on Wed Jul 27 13:07:05 2022
 
  

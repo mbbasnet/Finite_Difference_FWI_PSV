@@ -493,7 +493,7 @@ void fwi_grad2(
 
             grad_lam[jz][jx] += snap_dt * dt * s1 ; 
             grad_mu[jz][jx]  += snap_dt * dt  *(s3 + s1 + s2) ;
-            grad_rho[jz][jx] += snap_dt * dt * s4 ;
+            grad_rho[jz][jx] -= snap_dt * dt * s4 ;
                 
             /*
             lm = lam[iz][ix] + 2.0 *mu[iz][ix];
@@ -556,8 +556,11 @@ void vsrc2(
                 if (src_shot_to_fire[is] == ishot){
 
                     //std::cout << "firing shot " << ishot << "::" << stf_z[is][it] <<"::" << stf_x[is][it] << std::endl;;
-                    vz[z_src[is]][x_src[is]] += dt*rho_zp[z_src[is]][x_src[is]]*stf_z[is][it]/(dz*dx);
-                    vx[z_src[is]][x_src[is]] += dt*rho_xp[z_src[is]][x_src[is]]*stf_x[is][it]/(dz*dx);
+                    //vz[z_src[is]][x_src[is]] += dt*rho_zp[z_src[is]][x_src[is]]*stf_z[is][it]/(dz*dx);
+                    //vx[z_src[is]][x_src[is]] += dt*rho_xp[z_src[is]][x_src[is]]*stf_x[is][it]/(dz*dx);
+
+                    vz[z_src[is]][x_src[is]] += (dz*dx)*stf_z[is][it]/dt;
+                    vx[z_src[is]][x_src[is]] += (dz*dx)*stf_x[is][it]/dt;
                 }
                 
             }

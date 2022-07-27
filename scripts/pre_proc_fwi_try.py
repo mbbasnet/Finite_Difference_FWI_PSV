@@ -22,8 +22,8 @@ cuda_computation = False # True: computation in GPU, False: in CPU
 
 
 # Geometric data
-dt = 0.1e-3; dz = 0.25; dx = 0.25 # grid intervals
-nt = 3200; nz = 401; nx = 201 # grid numbers (adding for PMLs as well)
+dt = 0.4e-4; dz = 0.05; dx = 0.05 # grid intervals
+nt = 2500; nz = 601; nx = 301 # grid numbers (adding for PMLs as well)
 
 
 # Number of PMLs in each direction
@@ -37,8 +37,8 @@ isurf_top = 0; isurf_bottom = 0; isurf_left = 0; isurf_right = 0
 
 
 snap_t1 = 0; snap_t2 = nt-1 # snap in time steps
-snap_z1 = 20; snap_z2 = 380  # snap boundaries z
-snap_x1 = 20; snap_x2 = 180 # snap boundaries x
+snap_z1 = 20; snap_z2 = nz-20  # snap boundaries z
+snap_x1 = 20; snap_x2 = nx-20 # snap boundaries x
 snap_dt = 3; snap_dz = 1; snap_dx = 1; # the snap intervals
 
 
@@ -48,11 +48,11 @@ nx_snap = snap_x2 - snap_x1
 
 # taper relative to the total grid
 # t: top, b: bottom, l: left, r: right
-taper_t1 = snap_z1 + np.int32(nz_snap*0.05); taper_t2 = taper_t1 + np.int32(nz_snap*0.1)
-taper_b1 = snap_z2 - np.int32(nz_snap*0.05); taper_b2 = taper_b1 - np.int32(nz_snap*0.1)
+taper_t1 = snap_z1 + np.int32(nz_snap*0.05); taper_t2 = taper_t1 + np.int32(nz_snap*0.2)
+taper_b1 = snap_z2 - np.int32(nz_snap*0.05); taper_b2 = taper_b1 - np.int32(nz_snap*0.2)
 
-taper_l1 = snap_x1 + np.int32(nx_snap*0.05); taper_l2 = taper_l1 + np.int32(nx_snap*0.1)
-taper_r1 = snap_x2 - np.int32(nx_snap*0.05); taper_r2 = taper_r1 - np.int32(nx_snap*0.1)
+taper_l1 = snap_x1 + np.int32(nx_snap*0.05); taper_l2 = taper_l1 + np.int32(nx_snap*0.2)
+taper_r1 = snap_x2 - np.int32(nx_snap*0.05); taper_r2 = taper_r1 - np.int32(nx_snap*0.2)
 
 #------------------------------------------------------------------------------
 
@@ -104,9 +104,9 @@ rho = np.full((nz, nx), scalar_rho)
 # scalar material variables (For original layers)
 Cp1 = 500.0
 Cs1 = 300.0
-scalar_rho = 1500.0
-mu1 = Cs1*Cs1*scalar_rho
-lam1 = Cp1*Cp1*scalar_rho - 2.0*scalar_mu
+rho1 = 1500.0
+mu1 = Cs1*Cs1*rho1
+lam1 = Cp1*Cp1*rho1 - 2.0*mu1
 mat_grid = 1 # 0 for scalar and 1 for grid
 
 # modifying density parameter (in original layers)
@@ -114,7 +114,7 @@ if (fwinv==False):
     for iz in range(0, nz):
         for ix in range(0, nx):
             if (((nx/2-ix)**2+(nz/2-iz)**2)<(nx*nx/49)):
-                #rho[iz][ix] = 1.5 * rho[iz][ix]
+                rho[iz][ix] = rho1
                 mu[iz][ix] = mu1
                 lam[iz][ix] = lam1
 
@@ -131,7 +131,7 @@ pml_npower_pml = 2.0
 damp_v_pml = Cp
 rcoef = 0.001
 k_max_pml = 1.0
-freq_pml = 50.0 # PML frequency in Hz
+freq_pml = 250.0 # PML frequency in Hz
 
 # -----------------------------------------------------
 
@@ -158,8 +158,8 @@ src_shot_to_fire = np.arange(0,nsrc,1, dtype=np.int32)
 nshot = nsrc # fire each shot separately
 
 # Creating reciever locations
-zrec = np.arange(20, 381, 2, dtype=np.int32)
-xrec = np.full((zrec.size,), 180, dtype=np.int32)
+zrec = np.linspace(30, nz-30, 72, dtype=np.int32)
+xrec = np.full((zrec.size,), nx-20, dtype=np.int32)
 nrec = zrec.size
 
 
@@ -181,6 +181,7 @@ plt.subplot(222)
 plt.imshow(mu)
 plt.subplot(223)
 plt.imshow(rho)
+plt.savefig('./input_model.png', format='png')#,figsize=(10,7), dpi=1000)
 plt.show()
 
 #--------------------------------------------------------
