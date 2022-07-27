@@ -29,7 +29,7 @@ stf_type = 1; rtf_type = 0
 fdorder = 2; fpad = 1
 
 #Boolen values
-fwinv = False
+fwinv = True
 if (fwinv):
     accu_save = False; seismo_save=True
     mat_save_interval = 1; rtf_meas_true = True # RTF field measurement exists
@@ -56,7 +56,7 @@ rho = np.full((nz, nx), scalar_rho)
 # scalar material variables
 Cp1 = 500.0
 Cs1 = 300.0
-scalar_rho = 1700
+scalar_rho = 1500
 mu1 = Cs1*Cs1*scalar_rho
 lam1 = Cp1*Cp1*scalar_rho - 2.0*scalar_mu
 mat_grid = 1 # 0 for scalar and 1 for grid
