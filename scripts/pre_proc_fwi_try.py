@@ -22,8 +22,8 @@ cuda_computation = False # True: computation in GPU, False: in CPU
 
 
 # Geometric data
-dt = 0.1e-3; dz = 0.4; dx = 0.4 # grid intervals
-nt = 3000; nz = 401; nx = 201 # grid numbers (adding for PMLs as well)
+dt = 0.1e-3; dz = 0.25; dx = 0.25 # grid intervals
+nt = 3200; nz = 401; nx = 201 # grid numbers (adding for PMLs as well)
 
 
 # Number of PMLs in each direction
@@ -68,7 +68,7 @@ fdorder = 2 # finite difference order
 fpad = 1 # number of additional grids for finite difference computation
 
 #forward only or fWI?
-fwinv = True # True: FWI, False: Forward only
+fwinv = False # True: FWI, False: Forward only
 
 # Internal parameters for different cases 
 if (fwinv):
@@ -86,9 +86,9 @@ else:
 #-----------------------------------------------------------------
 
 # scalar material variables
-Cp = 2000.0
-Cs = 700.0
-scalar_rho = 1500.0
+Cp = 800.0
+Cs = 400.0
+scalar_rho = 1700.0
 scalar_mu = Cs*Cs*scalar_rho
 scalar_lam = Cp*Cp*scalar_rho - 2.0*scalar_mu
 mat_grid = 1 # 0 for scalar and 1 for grid
@@ -102,8 +102,8 @@ rho = np.full((nz, nx), scalar_rho)
 
 
 # scalar material variables (For original layers)
-Cp1 = 1800.0
-Cs1 = 500.0
+Cp1 = 500.0
+Cs1 = 300.0
 scalar_rho = 1500.0
 mu1 = Cs1*Cs1*scalar_rho
 lam1 = Cp1*Cp1*scalar_rho - 2.0*scalar_mu
