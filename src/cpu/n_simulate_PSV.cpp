@@ -463,10 +463,10 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
         // Update material parameters to the gradients !!
 		update_mat2(lam, lam_copy, grad_lam, 4.8e+10, 0.0, step_length, nz, nx);
         update_mat2(mu, mu_copy, grad_mu, 2.7e+10, 0.0, step_length, nz, nx);
-
+/*
         step_length_rho = 0.5 * step_length;
         update_mat2(rho, rho_copy, grad_rho, 3000.0, 1.25, step_length_rho, nz, nx);
-
+*/
         //
         // Saving the Accumulative storage file to a binary file for every shots
         std::cout<<"Iteration step: " <<iterstep<<", "<<mat_save_interval<<", "<< iterstep%mat_save_interval<<std::endl;
@@ -475,6 +475,12 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
             std::cout << "Writing updated material to binary file for ITERATION " << iterstep ;
             write_mat(lam, mu, rho, nz, nx, iterstep);
             std::cout <<" <DONE>"<< std::endl;
+        }
+
+        // Writing the norm data in the end
+        std::cout<<"L2 norm: ";
+        for(unsigned int inorm=0; inorm<iterstep+1; inorm++){
+            std::cout<<L2_norm[inorm]<<", ";
         }
 
 	   // smooth model
@@ -495,5 +501,9 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
         write_mat(lam, mu, rho, nz, nx, iterstep);
         std::cout <<" <DONE>"<< std::endl;
     }
+    std::cout<<"L2 norm (200 data): ";
+        for(unsigned int inorm=0; inorm<200; inorm++){
+            std::cout<<L2_norm[inorm]<<", ";
+        }
 }
 

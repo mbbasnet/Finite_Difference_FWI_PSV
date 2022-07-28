@@ -68,7 +68,7 @@ fdorder = 2 # finite difference order
 fpad = 1 # number of additional grids for finite difference computation
 
 #forward only or fWI?
-fwinv = True # True: FWI, False: Forward only
+fwinv = False # True: FWI, False: Forward only
 
 # Internal parameters for different cases 
 if (fwinv):
@@ -86,8 +86,8 @@ else:
 #-----------------------------------------------------------------
 
 # scalar material variables
-Cp = 800.0
-Cs = 400.0
+Cp = 500.0
+Cs = 300.0
 scalar_rho = 1700.0
 scalar_mu = Cs*Cs*scalar_rho
 scalar_lam = Cp*Cp*scalar_rho - 2.0*scalar_mu
@@ -102,9 +102,9 @@ rho = np.full((nz, nx), scalar_rho)
 
 
 # scalar material variables (For original layers)
-Cp1 = 500.0
-Cs1 = 300.0
-rho1 = 1500.0
+Cp1 = 800.0
+Cs1 = 400.0
+rho1 = 1700.0
 mu1 = Cs1*Cs1*rho1
 lam1 = Cp1*Cp1*rho1 - 2.0*mu1
 mat_grid = 1 # 0 for scalar and 1 for grid
@@ -146,7 +146,7 @@ freq_pml = 250.0 # PML frequency in Hz
 stf_type = 1; rtf_type = 0 # 1:velocity, 2:displacement
 
 # Creating source locations
-zsrc = np.array([nz/4, nz/2, 3*nz/4], dtype=np.int32)
+zsrc = np.linspace(nz/8, 7*nz/8, 7, dtype=np.int32)
 xsrc = np.full((zsrc.size,), 20, dtype=np.int32)
 nsrc = zsrc.size # counting number of sources from the source location data
 
