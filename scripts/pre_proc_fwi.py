@@ -88,7 +88,7 @@ else:
 # scalar material variables
 Cp = 500.0
 Cs = 300.0
-scalar_rho = 1700.0
+scalar_rho = 1500.0
 scalar_mu = Cs*Cs*scalar_rho
 scalar_lam = Cp*Cp*scalar_rho - 2.0*scalar_mu
 mat_grid = 1 # 0 for scalar and 1 for grid

@@ -463,10 +463,10 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
         // Update material parameters to the gradients !!
 		update_mat2(lam, lam_copy, grad_lam, 4.8e+10, 0.0, step_length, nz, nx);
         update_mat2(mu, mu_copy, grad_mu, 2.7e+10, 0.0, step_length, nz, nx);
-/*
+
         step_length_rho = 0.5 * step_length;
         update_mat2(rho, rho_copy, grad_rho, 3000.0, 1.25, step_length_rho, nz, nx);
-*/
+
         //
         // Saving the Accumulative storage file to a binary file for every shots
         std::cout<<"Iteration step: " <<iterstep<<", "<<mat_save_interval<<", "<< iterstep%mat_save_interval<<std::endl;
