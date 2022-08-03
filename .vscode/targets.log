@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Fri Jul 29 11:22:32 2022
+# Make data base, printed on Wed Aug  3 11:05:30 2022
 
 # Variables
 
@@ -63,7 +63,7 @@ LC_NAME = de_DE.UTF-8
 # environment
 VSCODE_CWD = /home/min
 # environment
-SSH_CONNECTION = 134.245.228.90 50276 134.245.30.91 22
+SSH_CONNECTION = 134.245.228.241 52826 134.245.30.91 22
 # environment
 PATH = /home/min/.vscode-server/bin/3b889b090b5ad5793f524b5d1d39fda662b96a2a/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
 # environment
@@ -73,7 +73,7 @@ SRC_CUDA :=
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/1001/vscode-ipc-7ef2ba54-32e6-4bfe-803d-4def7d213e46.sock
+VSCODE_IPC_HOOK_CLI = /run/user/1001/vscode-ipc-ffc67d84-10ed-47c4-b020-c03218006804.sock
 # makefile (from 'Makefile', line 17)
 LIB = 
 # default
@@ -99,7 +99,7 @@ LESSCLOSE = /usr/bin/lesspipe %s %s
 # environment
 LOGNAME = min
 # environment
-APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = true
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
 # automatic
 +F = $(notdir $+)
 # environment
@@ -115,7 +115,7 @@ MAKECMDGOALS := all
 # environment
 SHLVL = 0
 # environment
-XDG_SESSION_ID = 702
+XDG_SESSION_ID = 936
 # environment
 USER = min
 # environment
@@ -139,7 +139,7 @@ MAKEFLAGS = pqrR
 # environment
 MFLAGS = -pqrR
 # environment
-SSH_CLIENT = 134.245.228.90 50276 22
+SSH_CLIENT = 134.245.228.241 52826 22
 # automatic
 +D = $(patsubst %/,%,$(dir $+))
 # makefile (from 'Makefile', line 4)
@@ -196,6 +196,7 @@ APP_DIR := bin
 # Directories
 
 # . (device 2050, inode 146474541): 19 files, no impossibilities.
+ 
 # src/cpu (device 2050, inode 146669770): 8 files, no impossibilities.
 # src (device 2050, inode 146669769): 11 files, no impossibilities.
 # ext: could not be stat'd.
@@ -305,7 +306,6 @@ build:
 # automatic
 # ? := 
 # variable set hash-table stats:
- 
 # Load=8/32=25%, Rehash=0, Collisions=1/13=8%
 #  recipe to execute (from 'Makefile', line 39):
 	@mkdir -p $(APP_DIR)
@@ -409,6 +409,6 @@ obj/src/h_simulate_PSV.o:
 # strcache performance: lookups = 92 / hit rate = 32%
 # hash-table stats:
 # Load=62/8192=1%, Rehash=0, Collisions=4/92=4%
-# Finished Make data base on Fri Jul 29 11:22:32 2022
+# Finished Make data base on Wed Aug  3 11:05:30 2022
 
  
