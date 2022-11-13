@@ -1,2 +1,5 @@
+
+*.bin
 *.o
+*.bin
 bin/seis_fwi
