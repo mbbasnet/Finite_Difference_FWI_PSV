@@ -70,7 +70,7 @@ if (fwinv):
     for ii in range(0,maxiter,1):
         # reading data from csv file
         #mat_dat = read_tensor("./bin/mat.bin", np.float64, (3, ndim[1], ndim[2]))
-        mat_dat = read_tensor("./bin/iter"+np.str(ii)+"_mat.bin", np.float64, (3, ndim[1], ndim[2]))
+        mat_dat = read_tensor("./bin/iter"+str(ii)+"_mat.bin", np.float64, (3, ndim[1], ndim[2]))
         
         lam = mat_dat[0][:][:]
         mu = mat_dat[1][:][:]
@@ -82,14 +82,14 @@ if (fwinv):
         plt.subplot(221)
         plt.imshow(Cp, animated=True)#, cmap=cm.seismic, interpolation='nearest')#, vmin=1700, vmax=1900)
         plt.colorbar()
-        #plt.title('Material [Iteration'+np.str(ii)+']', y=-0.2)
+        #plt.title('Material [Iteration'+str(ii)+']', y=-0.2)
         plt.xlabel('X [no. of grids]')
         plt.ylabel('Z [no. of grids]')
         plt.title(r'$C_p \ (m/s)$')
         plt.subplot(222)
         plt.imshow(Cs, animated=True)#, cmap=cm.seismic,  interpolation='nearest')#, vmin=1700, vmax=1900)
         plt.colorbar()
-        #plt.title('Material [Iteration'+np.str(ii)+']', y=-0.2)
+        #plt.title('Material [Iteration'+str(ii)+']', y=-0.2)
         plt.xlabel('X [no. of grids]')
         plt.ylabel('Z [no. of grids]')
         plt.title(r'$C_s \ (m/s)$')
@@ -110,9 +110,9 @@ if (fwinv):
         else:
             plt.pause(0.005)
             plt.clf()
-        plt.savefig('./iter'+np.str(ii)+'_mat.png', format='png', bbox_inches='tight')
+        plt.savefig('./iter'+str(ii)+'_mat.png', format='png', bbox_inches='tight')
         
-        #print('Figure '+np.str(ii)+' plotted.')
+        #print('Figure '+str(ii)+' plotted.')
 
     
 else:
@@ -159,8 +159,8 @@ else:
         plt.subplot(211)
         plt.imshow(vz, animated=True, cmap=cm.seismic, interpolation='nearest', vmin=-clipz, vmax=clipz)
         plt.colorbar()
-        plt.title('Vz [Time snap '+np.str(ii)+']', y=-0.2)
-        plt.xlabel('X [no. of grids]'+np.str(ii))
+        plt.title('Vz [Time snap '+str(ii)+']', y=-0.2)
+        plt.xlabel('X [no. of grids]'+str(ii))
         plt.ylabel('Z [no. of grids]')
         #pyplot.gca().invert_yaxis()
         #pyplot.axis('equal')
@@ -168,8 +168,8 @@ else:
         plt.subplot(212)
         plt.imshow(vx, animated=True, cmap=cm.seismic, interpolation='nearest', vmin=-clipx, vmax=clipx)
         plt.colorbar()
-        plt.title('Vx [Time snap '+np.str(ii)+']', y=-0.2)
-        plt.xlabel('X [no. of grids]'+np.str(ii))
+        plt.title('Vx [Time snap '+str(ii)+']', y=-0.2)
+        plt.xlabel('X [no. of grids]'+str(ii))
         plt.ylabel('Z [no. of grids]')
         #pyplot.gca().invert_yaxis()
         #pyplot.axis('equal')
@@ -186,6 +186,6 @@ else:
         #else:
         #    pyplot.show()
         
-        #print('Figure '+np.str(ii)+' plotted.')
+        #print('Figure '+str(ii)+' plotted.')
         del vz
 # %%
