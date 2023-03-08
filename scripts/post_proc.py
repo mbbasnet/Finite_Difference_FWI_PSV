@@ -125,7 +125,8 @@ else:
     rtf_uz = read_tensor("./bin/shot0_rtf_uz.bin", np.float64, (nrec, ndim[0]))
     rtf_ux = read_tensor("./bin/shot0_rtf_ux.bin", np.float64, (nrec, ndim[0]))
     
-    
+    print('Data hao:')
+    print(rtf_uz)
     # Plotting the RTF functions
     plt.figure(1)
     plt.subplot(211)

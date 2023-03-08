@@ -102,7 +102,7 @@ def read_tensor(filename, dtype, dshape):
 
 
 # reading the input data for the array size
-read_metaint("./FWD_PLOT_OUT/metaint.bin", np.int32)
+read_metaint("./FWD_PLOT_OUT/metaint.bin", np.int32) 
 snap_dt = snap[6]
 snap_nt = np.int32(1 + (ndim[0]-1)//snap[6])
 snap_nz = 1 + (snap[3] - snap[2])//snap[7]
@@ -129,7 +129,7 @@ dep = d_tot # Depth
 npml_dz = 120
 npml_fpad = 20
 
-
+# What to plot
 plot_ricker= False
 plot_seismograms = True
 plot_vel = False

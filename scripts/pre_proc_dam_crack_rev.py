@@ -1,14 +1,8 @@
 #%%
 # # preprocessing of the files
 import numpy as np
-import scipy as sp
-import random
-import scipy.ndimage
 from seismic_def import read_tensor, e_lami, v_lami, w_vel
 import matplotlib.pyplot as plt
-from matplotlib import cm
-from scipy import interpolate
-import pickle
 
 ftype = np.float64
 
@@ -41,54 +35,56 @@ cuda_computation = False # True: computation in GPU, False: in CPU
 
 #---------------------------------------------------------------------
 
-# read the profile 
-xy_profile = np.loadtxt('./io/profile_P2.csv', delimiter=',').T
 
-# getting x and y along the desired x
-
-# import sampling data from seismics
-infile = open('./io/xseis.pkl','rb')
-data_seis = pickle.load(infile)
-infile.close()
-nsrc = data_seis[1]
-nrec = data_seis[2]
-nSample = data_seis[3]
-
-dt_field = data_seis[4]
-xsrc_cartesian = data_seis[5]
-xrec_cartesian = data_seis[6]
-shot_fire = data_seis[7]
 
 #---------------------------------------------------------------------
 # GRID PARAMETERS
 #--------------------------------------------------------------------
 
+# Field parameters
+l_uadd = 1.0
+l_usl = 12.0
+l_top = 3.0
+l_dsl = 12.0
+l_dadd = 1.0
+len = l_uadd + l_usl + l_top + l_dsl + l_dadd  # Meters
+
+d_top = 0.5
+d_wt = 1.0
+d_sub = 4.5
+d_tot = 7.0
+dep = d_tot # Depth
+
+
 # Number of PMLs in each direction
 pml_z = True; pml_x = True # PML exist in both direction
 npml_top = 20; npml_bottom = 20; npml_left = 20; npml_right = 20
 
-# Geometric data
-x0 = -0.5; x1 = 18.0 # the start and end of model in meters
-dt = dt_field; dz = 0.08; dx = 0.08; # grid intervals
-nt = 7000 #int(nSample*2/3) # taking portion of total samples
+#--------------possible changes---------------#
+# Geometric data (may have to change)
+dt = 1.0e-5; dz = 0.04; dx = 0.04; # grid intervals
+nt = np.int32(0.1/dt); 
+# -----------------------------------------------
 
-range_y= abs(max(xy_profile[1]) - min(xy_profile[1]))
 
-nx = fpad + npml_left + int(abs(x1-x0)/dx) + npml_right + fpad+ 1
-z_add1 = 10 # adding some layer above the ground profile
-z_add2 = 20 # adding some layers below the ground profile
-nz = fpad + npml_top + z_add1 + int(range_y/dz) + z_add2 + npml_bottom + fpad + 1 # adding some additional grids z_add1 and z_add2
+
+print('nt: ', nt)
+nz = fpad + npml_top + np.int32(dep/dz) + npml_bottom + fpad+ 1
+nx = fpad + npml_left + np.int32(len/dx) + npml_right + fpad + 1 # grid numbers (adding for PMLs as well)
+
 
 # Surface grid index in each direction (0 = no surface)
-surf = False # surface exists
+surf = True # surface exists
 isurf_top = 0; isurf_bottom = 0; isurf_left = 0; isurf_right = 0
 
+print('NZNX: ', nz, nx)
+
 snap_t1 = 0; snap_t2 = nt-1 # snap in time steps
-snap_z1 = fpad +npml_top
+snap_z1 = fpad + npml_top #+np.int32(d_wt/dz) 
 snap_z2 = nz - fpad - npml_bottom #fpad+npml_top+np.int32(d_tot/dz) # snap boundaries z
-snap_x1 = fpad +npml_left + 15
-snap_x2 = nx - fpad - npml_bottom - 15 # snap boundaries x
-snap_dt = 3; snap_dz = 1; snap_dx = 1; # the snap interval
+snap_x1 = fpad + npml_left #np.int32(nx/2 - 1.0*l_top/dz) 
+snap_x2 = nx - fpad - npml_right #np.int32(nx/2  + 1.0*l_top/dz) # snap boundaries x
+snap_dt = 20; snap_dz = 1; snap_dx = 1; # the snap interval
 
 # Taper position
 nz_snap = snap_z2 - snap_z1
@@ -96,39 +92,21 @@ nx_snap = snap_x2 - snap_x1
 
 # taper relative to the total grid
 # t: top, b: bottom, l: left, r: right
-taper_t1 = snap_z1 + np.int32(nz_snap*0.05); taper_t2 = taper_t1 + np.int32(nz_snap*0.05)
-taper_b1 = snap_z2 - np.int32(nz_snap*0.05); taper_b2 = taper_b1 - np.int32(nz_snap*0.05)
+taper_t1 = snap_z1 + np.int32(nz_snap*0.00); taper_t2 = taper_t1 + np.int32(nz_snap*0.00)
+taper_b1 = snap_z2 - np.int32(nz_snap*0.00); taper_b2 = taper_b1 - np.int32(nz_snap*0.00)
 
-taper_l1 = snap_x1 + np.int32(nx_snap*0.05); taper_l2 = taper_l1 + np.int32(nx_snap*0.05)
-taper_r1 = snap_x2 - np.int32(nx_snap*0.05); taper_r2 = taper_r1 - np.int32(nx_snap*0.05)
+taper_l1 = snap_x1 + np.int32(nx_snap*0.0); taper_l2 = taper_l1 + np.int32(nx_snap*0.00)
+taper_r1 = snap_x2 - np.int32(nx_snap*0.0); taper_r2 = taper_r1 - np.int32(nx_snap*0.00)
 #snap_z1 = 1; snap_z2 = nz-1  # snap boundaries z
 #snap_x1 = 1; snap_x2 = nx-1 # snap boundaries x
 
 #------------------------------------------------------------------------------
-# updating the profile in the grid
-xy_profile[1] = max(xy_profile[1])-xy_profile[1] # setting the top most point at zero
 
-# getting maximum and minimum values for the grid including npml and fpads
-xmin = x0 - (npml_left+fpad)*dx
-xmax = x1 + (npml_right+fpad)*dx
-zmin = min(xy_profile[1]) - (z_add1 + npml_top+fpad)*dz
-zmax = max(xy_profile[1]) + (z_add2 + npml_bottom+fpad)*dz
 
-xy_profile[1] += min(xy_profile[1])-zmin # adding additional part for additional top, npml top and fpad
-surf_fx = interpolate.interp1d(xy_profile[0], xy_profile[1]) # spline interpolation 
 
-x_coord = np.linspace(xmin, xmax, nx) # the x coordinate along the grid
-z_coord = np.linspace(zmin, zmax, nz) # the x coordinate along the grid
 
-# getting the surface profile of z along the surface for each x value
-z_coord_surf = surf_fx(x_coord)
 
-surf_idz = np.zeros(x_coord.size, dtype=int)
-# now getting the x z pair of grid index along the surface (z value for each x)
-for ii in range(0, nx):
-    # find the corresponding grid index for z coord along the surface
-    surf_idz[ii] = int(z_coord_surf[ii]/dz)
-    
+
 
 #------------------------------------------------------------------
 # MEDIUM (MATERIAL) PARAMETERS
@@ -136,42 +114,41 @@ for ii in range(0, nx):
 
 # material input values scalar or arrays
 mat_grid = 1 # 0 for scalar and 1 for grid
-
 #---------------------------------------------------
+
+#--------------possible changes---------------#
 # Adding material properties for different materials
 rho_air = 1.25
 lam_air, mu_air = v_lami(0.0, 0.0, rho_air)
 
+rho_water = 1.25 #1000
+lam_water, mu_water = v_lami(0.0, 0.0, rho_water) #v_lami(1482, 0.0, rho_water)
 
 
-rho_sand = 1200.0
-lam_sand, mu_sand = v_lami(700, 300, rho_sand)
-
-rho_sub = 2000
-lam_sub, mu_sub = v_lami(1200, 500, rho_sub)
-
-'''
-rho_water = 1000.0
-lam_water, mu_water = v_lami(1500, 0.0, rho_water)
-#rho_sub = 1800.0
-#lam_sub, mu_sub = v_lami(1400, 700, rho_sub)
 rho_sand = 1700.0
-lam_sand, mu_sand = v_lami(700, 200, rho_sand)
-rho_sub = 2000.0
-lam_sub, mu_sub = v_lami(1400, 700, rho_sub)
-'''
+lam_sand, mu_sand = v_lami(800, 400, rho_sand)
 
-rho_sand_grout = 1200.0 #2000.0
-lam_sand_grout, mu_sand_grout = v_lami(300, 100, rho_sand_grout)
+rho_sand_sat =  rho_sand #1950.0
+lam_sand_sat, mu_sand_sat = v_lami(800, 400, rho_sand) #v_lami(1450, 400, rho_sand_sat)
+
+# The lower layers
+rho_sub = 2100.0
+lam_sub, mu_sub = v_lami(1900, 700, rho_sub)
+
+
+# the material filled in the crack
+rho_crack = 1.25 #1000.0 #2000.0
+lam_crack, mu_crack = v_lami(0.0, 0.0, rho_crack) #v_lami(1482, 0.0, rho_crack)
 
 # --------------------------------------------
-# The scalar material values
-scalar_lam = lam_sand
-scalar_mu = mu_sand
-scalar_rho = mu_sand
 
 # Getting wave velocities for hardest layers
-Cp, Cs = w_vel(lam_sand, mu_sand, rho_sand)
+Cp, Cs = w_vel(lam_sub, mu_sub, rho_sub)
+
+# Scalar material values to pass to the kernels
+scalar_rho = rho_sub
+scalar_mu = mu_sub
+scalar_lam = lam_sub
 
 # --------------------------------------------------
 # preparing  the starting material arrays (Fill with Air)
@@ -183,35 +160,50 @@ rho = np.full((nz, nx), rho_air)
 # add for dam sand layer
 for iz in range(0, nz):
     for ix in range(0, nx):
-        if iz>=surf_idz[ix]:
-            lam[iz][ix] = lam_sub *(1+ 0.25*random.uniform(-1,1))
-            mu[iz][ix] = mu_sub *(1+ 0.25*random.uniform(-1,1))
-            rho[iz][ix] = rho_sub *(1+ 0.25*random.uniform(-1,1))
-            
-            #if (ix >=0 and ix <100):
-            if iz<surf_idz[0]+2.0/dx:
-                lam[iz][ix] = lam_sand*(1+ 0.25*random.uniform(-1,1))
-                mu[iz][ix] = mu_sand*(1+ 0.25*random.uniform(-1,1))
-                rho[iz][ix] = rho_sand*(1+ 0.25*random.uniform(-1,1))
-                
-                if iz<surf_idz[ix]+3.0/dx:
-                    if (ix >=10/dx and ix <10.4/dx):
-                        lam[iz][ix] = lam_sand_grout*(1+ 0.25*random.uniform(-1,1))
-                        mu[iz][ix] = mu_sand_grout*(1+ 0.25*random.uniform(-1,1))
-                        rho[iz][ix] = rho_sand_grout*(1+ 0.25*random.uniform(-1,1))
-      
-sigma = [5.0, 5.0]
-lam = sp.ndimage.filters.gaussian_filter(lam, sigma, mode='constant')
-mu = sp.ndimage.filters.gaussian_filter(mu, sigma, mode='constant')
-rho = sp.ndimage.filters.gaussian_filter(rho, sigma, mode='constant')
+        # for sand dam
+        if (iz>np.int32(fpad + npml_top+d_top/dz)): # top boundary 
+            if (iz - np.int32(fpad + npml_top+d_top/dz) >= 0.33*(ix - (fpad + npml_left + np.int32((l_uadd + l_usl + l_top)/dx)))):
+                if (iz - (fpad + npml_top + np.int32(d_top/dz)) >= -0.33*(ix - (fpad + npml_left + np.int32((l_uadd + l_usl)/dx)))):
+                    lam[iz][ix] = lam_sand
+                    mu[iz][ix] = mu_sand
+                    rho[iz][ix] = rho_sand
+                    
+                    if (iz-72) > 0.00025*(ix-593)*(ix-593):
+                        lam[iz][ix] = lam_sand_sat
+                        mu[iz][ix] = mu_sand_sat
+                        rho[iz][ix] = rho_sand_sat
 
-for iz in range(0, nz):
-    for ix in range(0, nx):
-        if iz<surf_idz[ix]:
-            lam[iz][ix] = lam_air
-            mu[iz][ix] = mu_air
-            rho[iz][ix] = rho_air
             
+                    
+                    
+        if (iz>np.int32(fpad + npml_top+d_wt/dz)): # water level boundary
+            if (iz - (fpad + npml_top + np.int32(d_top/dz)) < -0.33*(ix - (fpad + npml_left + np.int32((l_uadd + l_usl)/dx)))):
+                lam[iz][ix] = lam_water
+                mu[iz][ix] = mu_water
+                rho[iz][ix] = rho_water
+                
+        if (iz>np.int32(fpad + npml_top +d_sub/dz)): # subsurface boundary
+            lam[iz][ix] = lam_sub
+            mu[iz][ix] = mu_sub
+            rho[iz][ix] = rho_sub
+
+        # Additional modificatoin for th
+        # +e modified material
+        if (fwinv==False):
+            #if ((iz > fpad + npml_top + (d_top+1.50)/dz) and (iz <= fpad + npml_top + (d_sub-0.5)/dz)): # top and bottom boundary
+            #    if ((ix > fpad + npml_left + (l_uadd+ l_usl +l_top/2 - 1.0)/dx - 0.25*np.cos(((iz*dz)-fpad-npml_top-d_top-1.5)*np.pi)/dz) and \
+            #        (ix < fpad + npml_left + (l_uadd+ l_usl +l_top/2 + 1.0)/dx + 0.25*np.cos(((iz*dz)-fpad-npml_top-d_top-1.5)*np.pi)/dz)): # left and right boundarz
+
+
+            # Place to modify for the crack 
+            #--------------possible changes---------------#
+            if (iz*dz > nz*dz/4): # The top of the crack
+                if (ix*dx > (nx*dx/2+(iz*dz -nz*dz/2.5))):
+                    if ((ix-10)*dx < (nx*dx/2+(iz*dz -nz*dz/2.5))):
+                        #if ((ix*dx - (nx*dx/2))**2 +(iz*dx - (nz*dz/2+0.4))**2 < 0.5):
+                        lam[iz][ix] = lam_crack
+                        mu[iz][ix] = mu_crack
+                        rho[iz][ix] = rho_crack
 
 #------------------------------------------------------------
 
@@ -227,7 +219,7 @@ pml_npower_pml = 2.0
 damp_v_pml = Cp
 rcoef = 0.001
 k_max_pml = 1.0
-freq_pml = (50.0 + 120)/2.0 # PML frequency in Hz
+freq_pml = 400.0 # PML frequency in Hz # can be changed # 
 
 # -----------------------------------------------------
 
@@ -239,40 +231,75 @@ freq_pml = (50.0 + 120)/2.0 # PML frequency in Hz
 #--------------------------------------------------------
 
 # source and reciever time functions type
-stf_type = 1; rtf_type = 0 # 1:velocity, 0:displacement
+stf_type = 1; rtf_type = 0 # 1:velocity, 2:displacement
 
-# finding the source and reciever locations
-xsrc = np.zeros((nsrc,), dtype=np.int32)
-zsrc = np.zeros((nsrc,), dtype=np.int32)
-xrec = np.zeros((nrec,), dtype=np.int32)
-zrec = np.zeros((nrec,), dtype=np.int32)
-print('xsrc cart:', xsrc_cartesian)
-print(xmin, xmax, zmin, zmax)
-print(nx, nz, nt)
-for ii in range(0, nsrc):
-    print('ii: ', ii)
-    xsrc[ii] = int((xsrc_cartesian[ii]-xmin)/dx)
-    print('src:', xsrc[ii])
-    zsrc[ii] = surf_idz[xsrc[ii]]
-    print('src_z:', zsrc[ii])
-    
-for ii in range(0, nrec):
-    xrec[ii] = int((xrec_cartesian[ii] - xmin)/dx)
-    zrec[ii] = surf_idz[xrec[ii]]
+# Creating source locations
+#xsrc = np.array([10 + np.int32(1.0/dx), 10 + np.int32(4.0/dx), 10 + np.int32(7.0/dx)], dtype=np.int32)
+#xsrc = np.array([npml_left + np.int32((4.0)/dx)], dtype=np.int32)
+#zsrc = np.full((xsrc.size,), npml_top+ np.int32((d_wt+0.5)/dz), dtype=np.int32)
 
-#plt.plot(x_coord, z_coord_surf, marker='x')
-plt.plot(np.arange(0, nx), surf_idz)
-plt.plot(xrec, zrec, marker='+', ls=' ')
-plt.plot(xsrc, zsrc, marker='o', ls=' ')
-plt.grid()
-plt.show()
+# Creating source locations
+xsrc = np.zeros((3,), dtype=np.int32)
+zsrc = np.zeros((3,), dtype=np.int32)
+nsrc = zsrc.size # counting number of sources from the source location data
+
+for isr in range(0,zsrc.size):
+    ix = (12.0)/nsrc
+    iz = (4.0)/nsrc
+    xsrc[isr] = np.int32(fpad + npml_left + (l_uadd + l_usl - isr*ix + 0.1)/dx)
+    zsrc[isr] = np.int32(fpad + npml_top + (d_top +isr*iz+0.1)/dz)
+
+
 
 # Creating source to fire arrays
-#src_shot_to_fire = np.arange(0,nsrc, dtype=np.int32)
-src_shot_to_fire = np.zeros((nsrc,), dtype=np.int32)
-for ii in range(0, src_shot_to_fire.size):
-    src_shot_to_fire[ii] = shot_fire[ii]
-nshot = max(src_shot_to_fire)+1 # fire each shot separately
+src_shot_to_fire = np.arange(0,nsrc,1, dtype=np.int32)
+#src_shot_to_fire = np.zeros((nsrc,), dtype=np.int32)
+
+nshot = nsrc # fire each shot separately
+
+'''
+# Creating reciever locations
+xrec1 = np.zeros((24,), dtype=np.int32)
+zrec1 = np.zeros((24,), dtype=np.int32)
+nrec = zrec.size # counting the recievers from the locations
+
+for ir in range(0,zrec.size):
+    ix = (12.0)/nrec
+    iz = (4.0)/nrec
+    xrec[ir] = np.int32(fpad + npml_left + (l_uadd + l_usl + l_top + ir*ix - 0.1)/dx)
+    zrec[ir] = np.int32(fpad + npml_top + (d_top +ir*iz+0.1)/dz)
+'''    
+xrec = np.linspace(np.int32(fpad + npml_left + (l_uadd )/dx), np.int32(fpad + npml_left +(l_uadd +l_usl + l_top+l_dsl)/dx), 55, dtype=np.int32)
+nrec = xrec.size # counting the recievers from the locations 
+zrec = np.zeros(xrec.size, dtype=np.int32)  
+# plotting the middle line 
+x_mid = (2*fpad+npml_left +npml_right+(l_uadd+l_usl+l_top+l_dsl+l_dadd)/dx + 1)/2
+slope_factor = (1/3)#* (l_usl + l_top+l_dsl)/(dx*nrec)
+for ii in range(0, xrec.size):
+    if xrec[ii] < np.int32(fpad + npml_left + (l_uadd + l_usl )/dx):
+        zrec[ii] = np.int32(fpad + npml_top + (d_sub+0.1)/dz - 0.33*(xrec[ii]-xrec[0]))
+        #zrec[-ii+1] = np.int32(fpad + npml_top + d_sub/dz - 0.33*(xrec[ii]-xrec[0]))
+    elif xrec[ii] < np.int32(fpad + npml_left + (l_uadd + l_usl + l_top )/dx):
+        zrec[ii]    = np.int32(fpad + npml_top + (d_top+0.1)/dz)
+        #zrec[-ii+1] = np.int32(fpad + npml_top + (d_top+0.1)/dz)
+    else:
+        zrec[ii] = zrec[-ii-1]
+        
+
+# ----------------------------------------------------------------------
+# Source and Receivers data references
+# nsrc: number of sources
+# xsrc, zsrc : coordinates of the source (in grid number position, not in meters)
+# nrec: number of sources
+# xrec, zrec : coordinates of the receivers(in grid number position, not in meters)
+# --------------------------------------------------------------------------------------
+    
+print('number of sources: ', nsrc)
+print('xcoordinate of source: ', xsrc)
+
+# overwrite the recorder to the last source location
+#xrec[0] = xsrc[2]
+#zrec[0] = zsrc[2]
 
 
 # -----------------------------------------------------
@@ -283,16 +310,17 @@ Cs = np.sqrt(mu/rho)
 Cp = np.sqrt((lam + 2 * mu)/rho)
     
 
+
 print('Plotting initial materials')
-plt.figure(1)
-plt.subplot(111)
-plt.imshow(Cp, cmap=cm.Paired) # lamda parameter
-plt.plot(xsrc,zsrc, ls = '', marker= 'o', markersize=4, color='k') # source positions
-plt.plot(xrec,zrec, ls = '', marker= '+', markersize=4, color='k') # reciever positions
+fig = plt.figure(1)
+plt.subplot(221)
+plt.imshow(Cp) # lamda parameter
+plt.plot(xsrc,zsrc, ls = '', marker= 'x', markersize=2) # source positions
+plt.plot(xrec,zrec, ls = '', marker= '+', markersize=2) # reciever positions
 plt.plot([snap_x1, snap_x2, snap_x2, snap_x1, snap_x1], [snap_z1, snap_z1, snap_z2, snap_z2, snap_z1], ls = '--')
 plt.plot([taper_l1, taper_r1, taper_r1, taper_l1, taper_l1], [taper_t1, taper_t1, taper_b1, taper_b1, taper_t1], ls = '--')
 plt.plot([taper_l2, taper_r2, taper_r2, taper_l2, taper_l2], [taper_t2, taper_t2, taper_b2, taper_b2, taper_t2], ls = '--')
-'''
+plt.plot((x_mid, x_mid), (0, nz))
 plt.subplot(222)
 plt.imshow(Cs)
 plt.plot(xsrc,zsrc, ls = '', marker= 'x', markersize=2) # source positions
@@ -307,7 +335,7 @@ plt.plot(xrec,zrec, ls = '', marker= '+', markersize=2) # reciever positions
 plt.plot([snap_x1, snap_x2, snap_x2, snap_x1, snap_x1], [snap_z1, snap_z1, snap_z2, snap_z2, snap_z1], ls = '--')
 plt.plot([taper_l1, taper_r1, taper_r1, taper_l1, taper_l1], [taper_t1, taper_t1, taper_b1, taper_b1, taper_t1], ls = '--')
 plt.plot([taper_l2, taper_r2, taper_r2, taper_l2, taper_l2], [taper_t2, taper_t2, taper_b2, taper_b2, taper_t2], ls = '--')
-'''
+fig.savefig('./io/pre_proc_dam_crack.png', format='png', bbox_inches='tight')
 plt.show()
 
 #--------------------------------------------------------
@@ -342,6 +370,7 @@ intarray  = np.concatenate((intarray, zrec), axis=None)
 intarray  = np.concatenate((intarray, xrec), axis=None)
 
 print("Metaint: ", metaint)
+print("Int array: ", intarray)
 
 # Creating float arrays and subsequent concatenation
 metafloat = np.array([dt, dz, dx, pml_npower_pml, damp_v_pml, rcoef, k_max_pml, freq_pml, \
@@ -367,6 +396,3 @@ material_inp.tofile('./bin/mat.bin')
 #--------------------------------------------------------
 #-------------------------------------------------------
 
-
-
-# %%
