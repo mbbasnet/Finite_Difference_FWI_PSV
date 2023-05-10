@@ -5,8 +5,9 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
+ 
 
-# Make data base, printed on Sun Jul 24 08:20:05 2022
+# Make data base, printed on Wed Jul 27 11:16:01 2022
 
 # Variables
 
@@ -20,11 +21,11 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 XDG_SESSION_CLASS = user
 # environment
 VSCODE_AGENT_FOLDER = /home/min/.vscode-server
-# makefile (from 'Makefile', line 15)
+# makefile (from 'Makefile', line 14)
 SRC := src/h_io_PSV.cpp src/h_simulate_PSV.cpp src/h_preproc_PSV.cpp src/h_checkfd_ssg_elastic.cpp src/h_holbergcoeff.cpp src/h_main.cpp src/cpu/n_simulate_PSV.cpp src/cpu/n_step_length_PSV.cpp src/cpu/n_PCG_PSV.cpp src/cpu/n_kernel_lib_PSV.cpp src/cpu/n_alloc_PSV.cpp src/cpu/n_kernel_PSV.cpp  
 # environment
 XDG_SESSION_TYPE = tty
-# makefile (from 'Makefile', line 10)
+# makefile (from 'Makefile', line 9)
 TARGET := seis_fwi
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
@@ -46,7 +47,7 @@ _ = /home/min/.vscode-server/bin/3b889b090b5ad5793f524b5d1d39fda662b96a2a/node
 MAKEFILE_LIST :=  Makefile
 # 'override' directive
 GNUMAKEFLAGS := 
-# makefile (from 'Makefile', line 8)
+# makefile (from 'Makefile', line 7)
 OBJ_DIR := obj
 # makefile (from 'Makefile', line 3)
 CXXFLAGS := -fopenmp 
@@ -63,20 +64,18 @@ LC_NAME = de_DE.UTF-8
 # environment
 VSCODE_CWD = /home/min
 # environment
-SSH_CONNECTION = 134.245.228.49 65441 134.245.30.91 22
+SSH_CONNECTION = 134.245.228.62 51820 134.245.30.91 22
 # environment
 PATH = /home/min/.vscode-server/bin/3b889b090b5ad5793f524b5d1d39fda662b96a2a/bin/remote-cli:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
 # environment
 XDG_RUNTIME_DIR = /run/user/1001
-# makefile (from 'Makefile', line 16)
+# makefile (from 'Makefile', line 15)
 SRC_CUDA := 
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-VSCODE_IPC_HOOK_CLI = /run/user/1001/vscode-ipc-73caee96-b799-4fee-853e-2877378dc0f7.sock
-# makefile (from 'Makefile', line 7)
-LDFLAGS := 
-# makefile (from 'Makefile', line 18)
+VSCODE_IPC_HOOK_CLI = /run/user/1001/vscode-ipc-77a52949-466c-41d9-bb57-eb289d701ab4.sock
+# makefile (from 'Makefile', line 17)
 LIB = 
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
@@ -117,14 +116,14 @@ MAKECMDGOALS := all
 # environment
 SHLVL = 0
 # environment
-XDG_SESSION_ID = 429
+XDG_SESSION_ID = 584
 # environment
 USER = min
 # environment
 LC_MONETARY = de_DE.UTF-8
 # makefile
 .DEFAULT_GOAL := all
-# makefile (from 'Makefile', line 11)
+# makefile (from 'Makefile', line 10)
 INCLUDE := -Iinclude -Iinclude/cpu 
 # automatic
 %D = $(patsubst %/,%,$(dir $%))
@@ -141,7 +140,7 @@ MAKEFLAGS = pqrR
 # environment
 MFLAGS = -pqrR
 # environment
-SSH_CLIENT = 134.245.228.49 65441 22
+SSH_CLIENT = 134.245.228.62 51820 22
 # automatic
 +D = $(patsubst %/,%,$(dir $+))
 # makefile (from 'Makefile', line 4)
@@ -150,11 +149,12 @@ CUXXFLAGS :=
 BROWSER = /home/min/.vscode-server/bin/3b889b090b5ad5793f524b5d1d39fda662b96a2a/bin/helpers/browser.sh
 # environment
 VSCODE_HANDLES_SIGPIPE = true
-# makefile (from 'Makefile', line 12)
+# makefile (from 'Makefile', line 11)
 INCLUDE_CUDA := 
 # default
 MAKEFILES := 
 # environment
+ 
 LC_NUMERIC = de_DE.UTF-8
 # automatic
 <F = $(notdir $<)
@@ -176,7 +176,7 @@ SUFFIXES :=
 LC_IDENTIFICATION = de_DE.UTF-8
 # default
 .RECIPEPREFIX := 
-# makefile (from 'Makefile', line 20)
+# makefile (from 'Makefile', line 19)
 OBJECTS := obj/src/h_io_PSV.o obj/src/h_simulate_PSV.o obj/src/h_preproc_PSV.o obj/src/h_checkfd_ssg_elastic.o obj/src/h_holbergcoeff.o obj/src/h_main.o obj/src/cpu/n_simulate_PSV.o obj/src/cpu/n_step_length_PSV.o obj/src/cpu/n_PCG_PSV.o obj/src/cpu/n_kernel_lib_PSV.o obj/src/cpu/n_alloc_PSV.o obj/src/cpu/n_kernel_PSV.o  
 # environment
 LC_ADDRESS = de_DE.UTF-8
@@ -186,10 +186,10 @@ MAKE_HOST := x86_64-pc-linux-gnu
 LANG = C
 # environment
 MOTD_SHOWN = pam
-# makefile (from 'Makefile', line 9)
+# makefile (from 'Makefile', line 8)
 APP_DIR := bin
 # variable set hash-table stats:
-# Load=89/1024=9%, Rehash=0, Collisions=15/129=12%
+# Load=88/1024=9%, Rehash=0, Collisions=15/131=11%
 
 # Pattern-specific Variable Values
 
@@ -197,18 +197,19 @@ APP_DIR := bin
 
 # Directories
 
-# . (device 2050, inode 146474541): 39 files, no impossibilities.
+# . (device 2050, inode 146474541): 14 files, no impossibilities.
 # src/cpu (device 2050, inode 146669770): 8 files, no impossibilities.
 # src (device 2050, inode 146669769): 11 files, no impossibilities.
 # ext: could not be stat'd.
 
-# 58 files, no impossibilities in 4 directories.
+# 33 files, no impossibilities in 4 directories.
 
 # Implicit Rules
 
 obj/%.o: %.cpp
-#  recipe to execute (from 'Makefile', line 26):
+#  recipe to execute (from 'Makefile', line 25):
 	@mkdir -p $(@D)
+ 
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(INCLUDE_CUDA) -c $< -o $@ $(LDFLAGS)
 
 # 1 implicit rules, 0 (0.0%) terminal.
@@ -263,7 +264,7 @@ obj/src/cpu/n_PCG_PSV.o:
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-07-23 11:56:59.03151299
+#  Last modified 2022-07-27 11:12:04.529228569
 #  File has been updated.
 #  Successfully updated.
 
@@ -273,9 +274,10 @@ obj/src/cpu/n_kernel_PSV.o:
 #  Modification time never checked.
 #  File has not been updated.
 
-# makefile (from 'Makefile', line 43)
+# makefile (from 'Makefile', line 42)
 debug: CXXFLAGS += -DDEBUG -g
 debug: all
+ 
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
 #  File does not exist.
@@ -308,7 +310,7 @@ build:
 # ? := 
 # variable set hash-table stats:
 # Load=8/32=25%, Rehash=0, Collisions=1/13=8%
-#  recipe to execute (from 'Makefile', line 40):
+#  recipe to execute (from 'Makefile', line 39):
 	@mkdir -p $(APP_DIR)
 	@mkdir -p $(OBJ_DIR)
 
@@ -334,11 +336,11 @@ bin/seis_fwi: obj/src/h_io_PSV.o obj/src/h_simulate_PSV.o obj/src/h_preproc_PSV.
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 34):
+#  recipe to execute (from 'Makefile', line 33):
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -o $(APP_DIR)/$(TARGET) $^ $(LDFLAGS)
 
-# makefile (from 'Makefile', line 46)
+# makefile (from 'Makefile', line 45)
 release: CXXFLAGS += -O2
 release: all
 #  Phony target (prerequisite of .PHONY).
@@ -349,6 +351,7 @@ release: all
 # Load=1/32=3%, Rehash=0, Collisions=0/2=0%
 
 # Not a target:
+ 
 .DEFAULT:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
@@ -358,8 +361,8 @@ run:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 50):
-	python3 ./scripts/pre_proc_fwi.py
+#  recipe to execute (from 'Makefile', line 49):
+	python3 ./scripts/pre_proc.py
 	$(APP_DIR)/$(TARGET) 
 	python3 ./scripts/post_proc.py
 
@@ -368,7 +371,7 @@ clean:
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 55):
+#  recipe to execute (from 'Makefile', line 54):
 	-@rm -rvf $(OBJ_DIR)/*
 	-@rm -rvf $(APP_DIR)/*
 
@@ -405,12 +408,12 @@ obj/src/h_simulate_PSV.o:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 82 / storage = 1244 B / avg = 15 B
-# current buf: size = 8162 B / used = 1244 B / count = 82 / avg = 15 B
+# strcache buffers: 1 (0) / strings = 57 / storage = 760 B / avg = 13 B
+# current buf: size = 8162 B / used = 760 B / count = 57 / avg = 13 B
 
-# strcache performance: lookups = 112 / hit rate = 26%
+# strcache performance: lookups = 87 / hit rate = 34%
 # hash-table stats:
-# Load=82/8192=1%, Rehash=0, Collisions=4/112=4%
-# Finished Make data base on Sun Jul 24 08:20:05 2022
+# Load=57/8192=1%, Rehash=0, Collisions=4/87=5%
+# Finished Make data base on Wed Jul 27 11:16:01 2022
 
  
