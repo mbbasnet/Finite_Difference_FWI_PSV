@@ -10,7 +10,7 @@ cuda_computation = False # True: computation in GPU, False: in CPU
 # Getting the input directly in this preprocessor file
 # Geometric data
 dt = 4.4e-5; dz = 0.05; dx = 0.05 # grid intervals
-nt = 3000; nz = 801; nx = 401 # grid numbers
+nt = 3000; nz = 601; nx = 301 # grid numbers
 
 # Number of PMLs in each direction
 pml_z = True; pml_x = True # PML exist in both direction
