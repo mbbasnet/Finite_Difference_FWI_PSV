@@ -11,6 +11,7 @@
 
 #include "n_simulate_PSV.hpp"
 #include <iostream>
+#include <fstream>
 #include <math.h>
 
 
@@ -179,6 +180,8 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
     // -----------------------------------------------------------------------------------------------------
     real beta_PCG, beta_i, beta_j;
 
+    real **temp_blur; // for gaussian smoothing
+
     // allocating main computational arrays
     accu = true; grad = true;
     alloc_varmain_PSV(vz, vx, uz, ux, We, We_adj, szz, szx, sxx, dz_z, dx_z, dz_x, dx_x, 
@@ -200,6 +203,10 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
     allocate_array(PCG_dir_lam, nz, nx);
     allocate_array(PCG_dir_mu, nz, nx);
     allocate_array(PCG_dir_rho, nz, nx);
+
+    //Allocating blurred arrays
+    allocate_array(temp_blur, nz, nx);
+ 
     
     for (int iz=0;iz<nz;iz++){
         for (int ix=0;ix<nx;ix++){
@@ -230,6 +237,10 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
     for (int ll=0;ll<1000;ll++){ L2_norm[ll] = 0.0;}
     real step_length = 0.01; // step length set to initial
     real step_length_rho = 0.01; // step length set to initial
+
+    std::ofstream l2_outfile;
+    const char* l2_fname = "L2_norm.txt";
+	l2_outfile.open(l2_fname);
     
     while (iter){ // currently 10 just for test (check the conditions later)
         std::cout << std::endl << std::endl;
@@ -313,6 +324,7 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
                 snap_dt, snap_dz, snap_dx);
 			
             // Smooth gradients
+            
         
             // Calculate Energy Weights
             energy_weights2(We, We_adj, snap_z1, snap_z2, snap_x1, snap_x2);
@@ -350,6 +362,10 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
         }
         
 		// Smooth the global gradient with taper functions
+        // smooth the materials
+        gaussian_blur(grad_lam,  temp_blur, nz, nx, snap_z1, snap_z2, snap_x1, snap_x2);
+        gaussian_blur(grad_mu,  temp_blur, nz, nx, snap_z1, snap_z2, snap_x1, snap_x2);
+        gaussian_blur(grad_rho,  temp_blur, nz, nx, snap_z1, snap_z2, snap_x1, snap_x2);
 		
 		// Preconditioning of Gradients
     
@@ -467,7 +483,12 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
         step_length_rho = 0.5 * step_length;
         update_mat2(rho, rho_copy, grad_rho, 3000.0, 1.25, step_length_rho, nz, nx);
 
-        //
+        // smooth the materials
+        gaussian_blur(lam,  temp_blur, nz, nx, snap_z1, snap_z2, snap_x1, snap_x2);
+        gaussian_blur(mu,  temp_blur, nz, nx, snap_z1, snap_z2, snap_x1, snap_x2);
+        gaussian_blur(rho,  temp_blur, nz, nx, snap_z1, snap_z2, snap_x1, snap_x2);
+  
+
         // Saving the Accumulative storage file to a binary file for every shots
         std::cout<<"Iteration step: " <<iterstep<<", "<<mat_save_interval<<", "<< iterstep%mat_save_interval<<std::endl;
         if (mat_save_interval>0 && !(iterstep%mat_save_interval)){
@@ -477,7 +498,14 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
             std::cout <<" <DONE>"<< std::endl;
         }
 
-	   // smooth model
+        // Write L2_norm in each iteration to file
+        std::cout << "writing l2 norm ...." << std::endl;
+        
+	    l2_outfile << iterstep  << ", "
+			<< L2_norm[iterstep] << std::endl;
+        
+
+	
 
        //
        iterstep++ ;
@@ -487,6 +515,7 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
            std::cout << "The change is less than minimal after " << iterstep << " iteration steps." << std::endl;
        }
     }
+    l2_outfile.close();
 
     // Saving the Accumulative storage file to a binary file for every shots
     if (mat_save_interval<1){
@@ -495,5 +524,10 @@ void simulate_fwi_PSV(int nt, int nz, int nx, real dt, real dz, real dx,
         write_mat(lam, mu, rho, nz, nx, iterstep);
         std::cout <<" <DONE>"<< std::endl;
     }
+
+    
+	
+
+
 }
 

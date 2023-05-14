@@ -1012,6 +1012,81 @@ void taper2(real **&A, int nz, int nx,
         }
     }
 
+}
 
+
+
+// Function to create Gaussian filter
+void FilterCreation(double GKernel[][5])
+{
+    // initialising standard deviation to 1.0
+    double sigma = 1.0;
+    double r, s = 2.0 * sigma * sigma;
+ 
+    // sum is for normalization
+    double sum = 0.0;
+ 
+    // generating 5x5 kernel
+    for (int x = -2; x <= 2; x++) {
+        for (int y = -2; y <= 2; y++) {
+            r = sqrt(x * x + y * y);
+            GKernel[x + 2][y + 2] = (exp(-(r * r) / s)) / (M_PI * s);
+            sum += GKernel[x + 2][y + 2];
+        }
+    }
+ 
+    // normalising the Kernel
+    for (int i = 0; i < 5; ++i)
+        for (int j = 0; j < 5; ++j)
+            GKernel[i][j] /= sum;
+}
+
+// Applying Gauss filter to the medium
+
+//parallelised
+void gaussian_blur(real **&A,  real **&A_blur, int nz, int nx, int snap_z1, int snap_z2, int snap_x1, int snap_x2){
+
+    double temp;
+    double GKernel[5][5];
+    FilterCreation(GKernel);
+
+    // First copying the array
+    #pragma omp parallel for collapse(2) 
+    for (int iz=0;iz<nz;iz++){
+        for (int ix=0;ix<nx;ix++){
+
+            A_blur[iz][ix] = A[iz][ix];
+        }
+    }
+    
+
+    // Copy material values for storage
+    #pragma omp parallel for collapse(2)
+    for (int iz=snap_z1;iz<snap_z2;iz++){
+        for (int ix=snap_x1;ix<snap_x2;ix++){
+
+            // for gauss kernel in 2d
+            // generating 5x5 kernel
+            temp = 0;
+            for (int z = -2; z <= 2; z++) {
+                for (int x = -2; x <= 2; x++) {
+                    temp += GKernel[z][x]*A[iz+z][ix+x];
+                }
+            }
+            A_blur[iz][ix] = temp;
+            
+        }
+        
+    }
+
+    // Copying back to the array
+    #pragma omp parallel for collapse(2) 
+    for (int iz=0;iz<nz;iz++){
+        for (int ix=0;ix<nx;ix++){
+
+            A_blur[iz][ix] = A[iz][ix];
+        }
+    }
+    
 
 }

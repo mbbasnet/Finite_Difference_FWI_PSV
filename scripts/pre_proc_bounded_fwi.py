@@ -15,8 +15,8 @@ cuda_computation = False # True: computation in GPU, False: in CPU
 #---------------------------------------------------------------------
 # Defining geometry
 
-x = 1.0 # x length in meter (only cube)
-z = 1.0 # z length in meter (onlx cube part)
+x = 0.3 # x length in meter (only cube)
+z = 0.3 # z length in meter (onlx cube part)
 
 
 #---------------------------------------------------------------------
@@ -25,8 +25,8 @@ z = 1.0 # z length in meter (onlx cube part)
 
 
 # Geometric data
-dt = 0.1e-4; dz = 0.005; dx = 0.005 # grid intervals
-nt = 9000; nz = int(z/dz)+1; nx = int(x/dx)+1 # grid numbers (adding for PMLs as well)
+dt = 0.2e-6; dz = 0.001; dx = 0.001 # grid intervals
+nt = 1500; nz = int(z/dz)+1; nx = int(x/dx)+1 # grid numbers (adding for PMLs as well)
 
 
 # Number of PMLs in each direction
@@ -49,8 +49,8 @@ isurf_top = 0; isurf_bottom = 0; isurf_left = 0; isurf_right = 0
 
 
 snap_t1 = 0; snap_t2 = nt-1 # snap in time steps
-snap_z1 = npml; snap_z2 = nz-npml  # snap boundaries z
-snap_x1 = npml; snap_x2 = nx -npml# snap boundaries x
+snap_z1 = npml+num_air_grid+2; snap_z2 = nz-npml-num_air_grid-2  # snap boundaries z
+snap_x1 = npml+num_air_grid+2; snap_x2 = nx -npml-num_air_grid-2# snap boundaries x
 snap_dt = 3; snap_dz = 1; snap_dx = 1; # the snap intervals
 
 
@@ -65,12 +65,13 @@ nx_snap = snap_x2 - snap_x1
 #taper_l1 = snap_x1 + np.int32(nx_snap*0.05); taper_l2 = taper_l1 + np.int32(nx_snap*0.1)
 #taper_r1 = snap_x2 - np.int32(nx_snap*0.05); taper_r2 = taper_r1 - np.int32(nx_snap*0.1)
 
-taper_t1 = npml+ num_air_grid+5
-taper_t2 = taper_t1+5
-
-taper_b1 = taper_t1; taper_b2 = taper_t2
+taper_t1 = snap_x1+5
+taper_t2 = taper_t1+10
 taper_l1 = taper_t1; taper_l2 = taper_t2
-taper_r1 = taper_t1; taper_r2 = taper_t2
+
+taper_b1 = snap_x2-5
+taper_b2 = taper_b1-10
+taper_r1 = taper_b1; taper_r2 = taper_b2
 #------------------------------------------------------------------------------
 
 
@@ -82,7 +83,7 @@ fdorder = 2 # finite difference order
 fpad = 1 # number of additional grids for finite difference computation
 
 #forward only or fWI?
-fwinv = False # True: FWI, False: Forward only
+fwinv = True # True: FWI, False: Forward only
 
 # Internal parameters for different cases 
 if (fwinv):
@@ -109,7 +110,7 @@ C1_c = 3200
 C2_c = 2000
 Cp = 500.0
 Cs = 300.0
-rho_c = 1500.0
+rho_c = 2500.0
 mu_c = C2_c*C2_c*rho_c
 lam_c = C1_c*C1_c*rho_c - 2.0*mu_c
 
@@ -140,12 +141,14 @@ if (fwinv==False):
     for iz in range(0, nz):
         for ix in range(0, nx):
             #if (((nx/2-ix)**2+(nz/2-iz)**2)<(nx*nx/49)):
-            if ix>npml+num_air_grid+30 and ix<npml+num_air_grid+70:
-                if ix>iz/2 and ix<iz/2+3:
+            if ix>npml+num_air_grid+(0.15*x)/dx and ix<npml+num_air_grid+(0.3*x)/dx:
+                if ix>iz/2 and ix<iz/2+(0.005)/dx :
                     #rho[iz][ix] = 1.5 * rho[iz][ix]
                     mu[iz][ix] = mu_air
                     lam[iz][ix] = lam_air
                     rho[iz][ix] = rho_air
+
+
 
 #------------------------------------------------------------
 
@@ -160,7 +163,7 @@ pml_npower_pml = 2.0
 damp_v_pml = Cp
 rcoef = 0.001
 k_max_pml = 1.0
-freq_pml = 250.0# PML frequency in Hz
+freq_pml = 80e+3 # PML frequency in Hz
 
 # -----------------------------------------------------
 
@@ -175,8 +178,17 @@ freq_pml = 250.0# PML frequency in Hz
 stf_type = 1; rtf_type = 0 # 1:velocity, 2:displacement
 
 # Creating source locations
-zsrc = np.array([nz/4, nz/2, 3*nz/4], dtype=np.int32)
-xsrc = np.full((zsrc.size,), npml+num_air_grid+1, dtype=np.int32)
+zsrc_l = np.array([nz/4, nz/2, 3*nz/4], dtype=np.int32)
+xsrc_l = np.full((zsrc_l.size,), npml+num_air_grid+3, dtype=np.int32)
+
+zsrc_r = zsrc_l
+xsrc_r = np.full((zsrc_r.size,), nx-(npml+num_air_grid+3), dtype=np.int32)
+
+xsrc_t = zsrc_l; xsrc_b = zsrc_l
+zsrc_t = xsrc_l; zsrc_b = xsrc_r
+# concatenate all
+xsrc = np.array([xsrc_l, xsrc_t, xsrc_r, xsrc_b]).reshape(-1,1)
+zsrc = np.array([zsrc_l, zsrc_t, zsrc_r, zsrc_b]).reshape(-1,1)
 nsrc = zsrc.size # counting number of sources from the source location data
 
 
@@ -187,8 +199,21 @@ src_shot_to_fire = np.arange(0,nsrc,1, dtype=np.int32)
 nshot = nsrc # fire each shot separately
 
 # Creating reciever locations
-zrec = np.arange(20, nz-20, 2, dtype=np.int32)
-xrec = np.full((zrec.size,), nx-20, dtype=np.int32)
+zrec_r = np.arange(npml+num_air_grid+2, nz-npml-num_air_grid-2, 2, dtype=np.int32)
+xrec_r = np.full((zrec_r.size,), nx-npml-num_air_grid-3, dtype=np.int32)
+
+zrec_l = zrec_r
+xrec_l = np.full((zrec_l.size,), npml+num_air_grid+3, dtype=np.int32)
+
+xrec_t = zrec_l
+zrec_t = xrec_l
+
+xrec_b = zrec_r
+zrec_b = xrec_r
+
+xrec = np.array([xrec_l, xrec_t, xrec_r, xrec_b]).reshape(-1,1)
+zrec = np.array([zrec_l, zrec_t, zrec_r, zrec_b]).reshape(-1,1)
+
 nrec = zrec.size
 
 
@@ -196,7 +221,7 @@ nrec = zrec.size
 # -----------------------------------------------------
 # PLOTTING INPUTS
 #---------------------------------------------------
-
+print('taper', snap_x1, taper_t1, taper_l2)
 print('Plotting initial materials')
 plt.figure(1)
 plt.subplot(221)

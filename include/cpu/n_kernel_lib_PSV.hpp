@@ -184,5 +184,9 @@ void taper2(real **&A, int nz, int nx,
     int &taper_l1, int &taper_l2, int &taper_r1, int &taper_r2);
 
 
+// Function to create Gaussian filter
+void FilterCreation(double GKernel[][5]);
+void gaussian_blur(real **&A,  real **&A_blur, int nz, int nx, int snap_z1, int snap_z2, int snap_x1, int snap_x2);
+
 
 #endif

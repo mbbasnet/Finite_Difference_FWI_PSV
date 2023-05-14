@@ -51,7 +51,7 @@ snap_nx = 1 + (snap[4] - snap[5])//snap[8]
 
 if (fwinv):
     print("Plotting material for iteration in fwi")
-    maxiter = 40
+    maxiter = 36
     for ii in range(0,maxiter,1):
         # reading data from csv file
         mat_dat = read_tensor("./bin/iter"+np.str(ii)+"_mat.bin", np.float64, (3, ndim[1], ndim[2]))
@@ -135,7 +135,7 @@ else:
     clipx = 0.3*max([clip_px, np.abs(clip_mx)])
     
     
-    for ii in range(1,snap_nt):
+    for ii in range(1,snap_nt,5):
         # reading data from csv file
         vz = vz_dat[ii,:,:]
         vx = vx_dat[ii,:,:]  
