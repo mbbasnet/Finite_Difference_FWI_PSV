@@ -47,7 +47,7 @@ release: CXXFLAGS += -O2
 release: all
 
 run:
-	python3 ./scripts/pre_proc_fwi_try.py
+	python3 ./scripts/pre_proc_bounded_fwi.py
 	$(APP_DIR)/$(TARGET) 
 	python3 ./scripts/post_proc.py
 

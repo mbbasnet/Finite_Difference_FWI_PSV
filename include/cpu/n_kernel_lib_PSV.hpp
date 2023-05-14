@@ -187,5 +187,9 @@ void gauss_filter_kernel(real**&kernel, int hfs);
 
 void apply_gauss_filter(real**&mat, real**&mat_temp, real**&filter, int nz, int nx, int hfs);
 
+// Function to create Gaussian filter
+void FilterCreation(double GKernel[][5]);
+void gaussian_blur(real **&A,  real **&A_blur, int nz, int nx, int snap_z1, int snap_z2, int snap_x1, int snap_x2);
+
 
 #endif
