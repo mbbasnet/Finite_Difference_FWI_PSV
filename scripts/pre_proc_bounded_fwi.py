@@ -25,8 +25,8 @@ z = 0.3 # z length in meter (onlx cube part)
 
 
 # Geometric data
-dt = 0.1e-6; dz = 0.0005; dx = 0.0005 # grid intervals
-nt = 3000; nz = int(z/dz)+1; nx = int(x/dx)+1 # grid numbers (adding for PMLs as well)
+dt = 0.15e-6; dz = 0.0008; dx = 0.0008 # grid intervals
+nt = 1000; nz = int(z/dz)+1; nx = int(x/dx)+1 # grid numbers (adding for PMLs as well)
 
 
 # Number of PMLs in each direction
@@ -107,7 +107,7 @@ lam_air, mu_air = v_lami(0.0, 0.0, rho_air)
 # Concrete parameters
 C1_c = 3200
 C2_c = 2000
-rho_c = 2400 
+rho_c = 2400
 mu_c = C2_c*C2_c*rho_c
 lam_c = C1_c*C1_c*rho_c - 2.0*mu_c
 Cp = C1_c # for later computations
@@ -161,7 +161,7 @@ pml_npower_pml = 2.0
 damp_v_pml = Cp
 rcoef = 0.001
 k_max_pml = 1.0
-freq_pml = 150e+3 # PML frequency in Hz
+freq_pml = 100e+3 # PML frequency in Hz
 
 # -----------------------------------------------------
 
@@ -176,7 +176,7 @@ freq_pml = 150e+3 # PML frequency in Hz
 stf_type = 1; rtf_type = 0 # 1:velocity, 2:displacement
 
 # Creating source locations
-zsrc_l = np.array([nz/3, 2*nz/3], dtype=np.int32)
+zsrc_l = np.array([nz/4, nz/2, 3*nz/4], dtype=np.int32)
 xsrc_l = np.full((zsrc_l.size,), npml+num_air_grid+3, dtype=np.int32)
 
 zsrc_r = zsrc_l
@@ -185,8 +185,10 @@ xsrc_r = np.full((zsrc_r.size,), nx-(npml+num_air_grid+3), dtype=np.int32)
 xsrc_t = zsrc_l; xsrc_b = zsrc_l
 zsrc_t = xsrc_l; zsrc_b = xsrc_r
 # concatenate all
-xsrc = np.array([xsrc_t, xsrc_r, np.flip(xsrc_b), np.flip(xsrc_l)]).reshape(-1,1)
-zsrc = np.array([zsrc_t, zsrc_r, np.flip(zsrc_b), np.flip(zsrc_l)]).reshape(-1,1)
+xsrc = np.array([xsrc_r, np.flip(xsrc_l)]).reshape(-1,1)
+zsrc = np.array([zsrc_r, np.flip(zsrc_l)]).reshape(-1,1)
+#xsrc = np.array([xsrc_t, xsrc_r, np.flip(xsrc_b), np.flip(xsrc_l)]).reshape(-1,1)
+#zsrc = np.array([zsrc_t, zsrc_r, np.flip(zsrc_b), np.flip(zsrc_l)]).reshape(-1,1)
 nsrc = zsrc.size # counting number of sources from the source location data
 
 
@@ -197,7 +199,7 @@ src_shot_to_fire = np.arange(0,nsrc,1, dtype=np.int32)
 nshot = nsrc # fire each shot separately
 
 # Creating reciever locations
-zrec_r = np.arange(npml+num_air_grid+2, nz-npml-num_air_grid-2, 5, dtype=np.int32)
+zrec_r = np.arange(npml+num_air_grid+2, nz-npml-num_air_grid-2, 10, dtype=np.int32)
 xrec_r = np.full((zrec_r.size,), nx-npml-num_air_grid-3, dtype=np.int32)
 
 zrec_l = zrec_r
