@@ -31,11 +31,11 @@ rtf_uz = disp[:,:,1]
 # Plotting the RTF functions
 plt.figure(1)
 plt.subplot(211)
-for ii in range(0, nrec,1):   
+for ii in range(0, nrec,16):   
     plt.plot(rtf_uz[:,ii])
 plt.grid()
 plt.subplot(212)
-for ii in range(0, nrec,1):
+for ii in range(0, nrec,16):
     plt.plot(rtf_ux[:,ii])
 plt.grid()
 plt.show()
@@ -56,9 +56,10 @@ clip_mx = np.amin(disp[:,:,0])
 clipx = 0.3*max([clip_px, np.abs(clip_mx)])
 zoom_factor = 10
 
-for ii in range(0,clip_nt, 2):
+for ii in range(0,clip_nt, 1):
     vx_dat = disp[ii,:,0]
     vz_dat = disp[ii,:,1]
+    vz_dat = np.sqrt(vz_dat*vz_dat+vx_dat*vx_dat)
     # reading data from csv file
     vz = vz_dat.reshape(9,9)
     vx = vx_dat.reshape(9,9)
@@ -68,7 +69,7 @@ for ii in range(0,clip_nt, 2):
     plt.subplot(121)
     plt.imshow(vz, animated=True, cmap=cm.seismic, interpolation='nearest', vmin=-clipz, vmax=clipz)
     plt.colorbar()
-    plt.title('Ux [Time snap '+str(ii)+']', y=-0.2)
+    plt.title('Amplitue [Time snap '+str(ii)+']', y=-0.2)
     plt.xlabel('X [no. of grids]'+str(ii))
     plt.ylabel('Z [no. of grids]')
     #pyplot.gca().invert_yaxis()
@@ -77,7 +78,7 @@ for ii in range(0,clip_nt, 2):
     plt.subplot(122)
     plt.imshow(vx, animated=True, cmap=cm.seismic, interpolation='nearest', vmin=-clipx, vmax=clipx)
     plt.colorbar()
-    plt.title('Vx [Time snap '+str(ii)+']', y=-0.2)
+    plt.title('Ux [Time snap '+str(ii)+']', y=-0.2)
     plt.xlabel('X [no. of grids]'+str(ii))
     plt.ylabel('Z [no. of grids]')
     #pyplot.gca().invert_yaxis()
